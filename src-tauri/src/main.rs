@@ -9,6 +9,7 @@ use profile::{Profile, ProfileStore};
 use launcher::LauncherEngine;
 use std::collections::HashMap;
 use std::sync::Mutex;
+use tauri::Manager;
 
 pub(crate) struct AppState {
     pub(crate) profiles: Mutex<Vec<Profile>>,
@@ -108,6 +109,19 @@ fn main() {
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             tray::build_tray(app.handle())?;
+
+            // 有托盘时，关闭主窗口应隐藏而不是销毁；否则托盘的“Show / Hide”
+            // 将无法重新显示窗口。托盘菜单中的 Quit 仍会真正退出应用。
+            if let Some(window) = app.get_webview_window("main") {
+                let window_to_hide = window.clone();
+                window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        api.prevent_close();
+                        let _ = window_to_hide.hide();
+                    }
+                });
+            }
+
             // 后台定期重建菜单，及时反映运行状态变化（含外部进程退出）
             let handle = app.handle().clone();
             std::thread::spawn(move || loop {

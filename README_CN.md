@@ -51,7 +51,8 @@
 - 🔄 **多窗口并发**：支持独立调起多个 Codex 桌面 App 窗口。
 - 🛡️ **物理目录隔离**：每个 Profile 独立隔离 `HOME`、`CODEX_HOME`、`--user-data-dir` 与 `TMPDIR`。
 - 🔑 **Git & SSH 自动关联**：自动为隔离 Profile 软链接宿主机的 `~/.gitconfig` 与 `~/.ssh`。
-- ⚡ **进程清理**：根据路径匹配使用 `pkill -9 -f` 清理主进程及 Helper 子进程。
+- ⚡ **进程清理**：根据 Profile 路径精准识别主进程，并清理完整的 Helper/Renderer 子进程树。
+- 🖥️ **系统托盘交互**：Windows 右下角托盘可直接启动/停止账号、全部停止、显示或隐藏主窗口；关闭主窗口时自动隐藏到托盘。
 - 📁 **拖拽文件夹启动**：将项目文件夹拖放到卡片上即可直接带路径调起。
 - 🔍 **查看数据目录**：可在 Finder / 文件资源管理器中打开当前 Profile 的物理存储文件夹。
 
@@ -97,8 +98,19 @@
 ## 🛠️ 构建与运行
 
 ### 环境要求
-- [Node.js](https://nodejs.org/) (v18+)
+- [Node.js](https://nodejs.org/) (v20.19+)
 - [Rust & Cargo](https://www.rust-lang.org/) (1.75+)
+- Windows：已安装 Microsoft Store 版 Codex Desktop，或通过 `CODEX_DESKTOP_PATH` 指定独立版 `ChatGPT.exe` / `Codex.exe`
+
+### Windows 首次启动说明
+
+Microsoft Store 应用的受保护安装目录不允许普通程序直接携带自定义环境启动。Codex Manager 第一次在 Windows 启动 Profile 时，会把当前安装版本的 Codex 程序复制到：
+
+```text
+%USERPROFILE%\.codex_manager\runtime\<Store 包版本>\app
+```
+
+这份运行时由所有 Profile 共用，账号的 `CODEX_HOME`、AppData、缓存和 Session 仍分别保存在各自的 Profile 目录。首次准备所需空间约等于已安装的 Codex Desktop（当前版本约 1.8 GiB），后续启动无需重复复制；Microsoft Store 更新后，下次启动会按新版本准备一份运行时。
 
 ### 开发模式
 

@@ -51,7 +51,8 @@ The tool isolates authentication sessions while allowing instances to retain acc
 - 🔄 **Multi-Instance Support**: Open multiple Codex windows with independent session directories.
 - 🛡️ **Environment Isolation**: Separate `HOME`, `CODEX_HOME`, `--user-data-dir`, `TMPDIR`, and cache folders per profile.
 - 🔑 **Git & SSH Linking**: Automatically links host `~/.gitconfig` and `~/.ssh` into profile directories.
-- ⚡ **Process Termination**: Stops master processes and helper sub-processes via path-matched `pkill -9 -f`.
+- ⚡ **Process Termination**: Finds the profile's root process by its isolated path and stops the complete helper/renderer process tree.
+- 🖥️ **System Tray Controls**: Launch or stop profiles, stop all instances, and show or hide the main window from the Windows notification area; closing the main window hides it to the tray.
 - 📁 **Folder Drag & Drop**: Drag a project folder onto a profile card to launch Codex scoped to that directory.
 - 🔍 **Data Directory Access**: Open a profile's physical data folder in Finder, File Explorer, or xdg-open.
 
@@ -97,8 +98,19 @@ The tool isolates authentication sessions while allowing instances to retain acc
 ## 🛠️ Build & Installation
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (v18+)
+- [Node.js](https://nodejs.org/) (v20.19+)
 - [Rust & Cargo](https://www.rust-lang.org/) (1.75+)
+- Windows: the Microsoft Store build of Codex Desktop, or a standalone `ChatGPT.exe` / `Codex.exe` selected through `CODEX_DESKTOP_PATH`
+
+### First launch on Windows
+
+The protected Microsoft Store installation cannot be started directly by a normal process with per-profile environment variables. On the first Windows profile launch, Codex Manager copies the currently installed Codex runtime to:
+
+```text
+%USERPROFILE%\.codex_manager\runtime\<Store package version>\app
+```
+
+All profiles share this runtime copy, while `CODEX_HOME`, AppData, caches, and sessions remain isolated in each profile directory. The initial copy needs roughly the same disk space as Codex Desktop (about 1.8 GiB for the currently tested build); later launches reuse it. After Microsoft Store installs a new Codex version, the next launch prepares a new versioned runtime.
 
 ### Development Mode
 

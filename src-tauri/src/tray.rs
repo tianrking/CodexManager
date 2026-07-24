@@ -11,7 +11,7 @@ use crate::launcher::LauncherEngine;
 use crate::AppState;
 use tauri::{
     menu::{MenuBuilder, MenuItem, PredefinedMenuItem},
-    tray::TrayIconBuilder,
+    tray::{MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Manager,
 };
 
@@ -38,9 +38,17 @@ pub fn build_tray(app: &AppHandle) -> tauri::Result<()> {
         .show_menu_on_left_click(true)
         .menu(&menu)
         .on_menu_event(|app, event| handle_menu_event(app, event.id.as_ref()))
-        .on_tray_icon_event(|tray, _event| {
-            // 点击即刷新，保证运行状态最新
-            let _ = rebuild_menu(tray.app_handle());
+        .on_tray_icon_event(|tray, event| {
+            // 只在一次点击完成时刷新。Move/Enter 事件频率很高，不能在其中扫描进程。
+            if matches!(
+                event,
+                TrayIconEvent::Click {
+                    button_state: MouseButtonState::Up,
+                    ..
+                }
+            ) {
+                let _ = rebuild_menu(tray.app_handle());
+            }
         })
         .build(app)?;
 

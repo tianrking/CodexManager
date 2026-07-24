@@ -26,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20.19'
           cache: 'npm'
 
       - name: Install Rust Stable
@@ -47,6 +47,9 @@ jobs:
 
       - name: Install Frontend Dependencies
         run: npm install
+
+      - name: Audit Frontend Dependencies
+        run: npm audit --audit-level=high
 
       - name: Build Frontend
         run: npm run build

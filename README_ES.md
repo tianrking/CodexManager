@@ -60,7 +60,7 @@ La herramienta aísla las sesiones de autenticación manteniendo el acceso a los
 ## 🛠️ Instalación y Compilación
 
 ### Requisitos previos
-- [Node.js](https://nodejs.org/) (v18+)
+- [Node.js](https://nodejs.org/) (v20.19+)
 - [Rust & Cargo](https://www.rust-lang.org/) (1.75+)
 
 ### Modo Desarrollo

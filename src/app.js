@@ -31,13 +31,14 @@ const translations = {
     defaultPathLabel: "Default Project Directory (or drag folder here)",
     btnStop: "Stop",
     btnLaunch: "Launch",
+    btnLaunching: "Preparing…",
     tipOpenFolder: "Open profile data folder in Finder / Explorer",
     tipEdit: "Edit Profile",
     tipDelete: "Delete Profile",
     confirmDelete: "Are you sure you want to delete profile '{name}'? Its isolated credential directory will be removed.",
     confirmStopAll: "Are you sure you want to stop all active Codex instances?",
     duplicateNameError: "A profile with this name already exists. Please use a unique name.",
-    codexNotFound: "Codex App was not found in standard system locations. Please ensure Codex Desktop App is installed.",
+    codexNotFound: "Codex Desktop could not be started. Ensure it is installed and enough disk space is available to prepare the isolated runtime.",
     appearanceLabel: "Appearance",
     appearanceTheme: "Theme",
     appearanceAccent: "Accent",
@@ -83,13 +84,14 @@ const translations = {
     defaultPathLabel: "默认主页目录 (或拖拽文件夹启动)",
     btnStop: "停止运行",
     btnLaunch: "独立启动",
+    btnLaunching: "准备中…",
     tipOpenFolder: "在 Finder / 文件资源管理器中查看此 Profile 凭据目录",
     tipEdit: "编辑 Profile",
     tipDelete: "删除 Profile",
     confirmDelete: "确认注销该 Profile 账号？专属凭据隔离物理目录也将被注销。",
     confirmStopAll: "确认一键关闭所有由本管理器启动的 Codex 实例？",
     duplicateNameError: "已存在同名 Profile 账号，请输入唯一的名称。",
-    codexNotFound: "未在系统标准路径检测到 Codex 桌面客户端，请确保已安装 Codex App。",
+    codexNotFound: "无法启动 Codex 桌面客户端。请确认已安装 Codex，并有足够磁盘空间准备隔离运行时。",
     appearanceLabel: "外观",
     appearanceTheme: "主题",
     appearanceAccent: "强调色",
@@ -135,13 +137,14 @@ const translations = {
     defaultPathLabel: "Directorio por defecto (o arrastre una carpeta aquí)",
     btnStop: "Detener",
     btnLaunch: "Iniciar",
+    btnLaunching: "Preparando…",
     tipOpenFolder: "Abrir carpeta de datos en Finder / Explorador",
     tipEdit: "Editar Perfil",
     tipDelete: "Eliminar Perfil",
     confirmDelete: "¿Está seguro de eliminar el perfil '{name}'? Se eliminará su directorio aislado.",
     confirmStopAll: "¿Está seguro de detener todas las instancias activas de Codex?",
     duplicateNameError: "Ya existe un perfil con este nombre. Por favor use un nombre único.",
-    codexNotFound: "No se encontró la aplicación Codex en las ubicaciones estándar del sistema.",
+    codexNotFound: "No se pudo iniciar Codex Desktop. Compruebe que está instalado y que hay espacio suficiente para preparar el entorno aislado.",
     appearanceLabel: "Apariencia",
     appearanceTheme: "Tema",
     appearanceAccent: "Acento",
@@ -182,6 +185,7 @@ let localProfiles = [
   }
 ];
 let localRunningPids = {};
+const launchingProfiles = new Set();
 let pollingInterval = null;
 
 // DOM 节点引用
@@ -655,8 +659,8 @@ function renderProfiles() {
               ${ICON_STOP}<span>${t('btnStop')}</span>
             </button>
           ` : `
-            <button class="btn btn-launch" data-action="launch" style="background:${profile.color}1a;color:${profile.color};border-color:${profile.color}33">
-              ${ICON_PLAY}<span>${t('btnLaunch')}</span>
+            <button class="btn btn-launch" data-action="launch" ${launchingProfiles.has(profile.id) ? 'disabled' : ''} style="background:${profile.color}1a;color:${profile.color};border-color:${profile.color}33">
+              ${ICON_PLAY}<span>${t(launchingProfiles.has(profile.id) ? 'btnLaunching' : 'btnLaunch')}</span>
             </button>
           `}
 
@@ -677,15 +681,27 @@ async function openProfileDir(id) {
 }
 
 async function launchProfile(id, customPath = null) {
-  if (invoke) {
-    const ok = await invoke('launch_profile', { profileId: id, projectPath: customPath || null });
-    if (!ok) {
-      alert(t('codexNotFound'));
+  if (launchingProfiles.has(id)) return;
+
+  launchingProfiles.add(id);
+  renderProfiles();
+  try {
+    if (invoke) {
+      const ok = await invoke('launch_profile', { profileId: id, projectPath: customPath || null });
+      if (!ok) {
+        alert(t('codexNotFound'));
+      }
+    } else {
+      localRunningPids[id] = 12345;
     }
-  } else {
-    localRunningPids[id] = 12345;
+    await fetchRunningStatus();
+  } catch (error) {
+    console.error('Failed to launch Codex profile:', error);
+    alert(t('codexNotFound'));
+  } finally {
+    launchingProfiles.delete(id);
+    renderProfiles();
   }
-  fetchRunningStatus();
 }
 
 async function stopProfile(id) {

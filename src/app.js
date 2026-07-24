@@ -37,7 +37,10 @@ const translations = {
     confirmDelete: "Are you sure you want to delete profile '{name}'? Its isolated credential directory will be removed.",
     confirmStopAll: "Are you sure you want to stop all active Codex instances?",
     duplicateNameError: "A profile with this name already exists. Please use a unique name.",
-    codexNotFound: "Codex App was not found in standard system locations. Please ensure Codex Desktop App is installed."
+    codexNotFound: "Codex App was not found in standard system locations. Please ensure Codex Desktop App is installed.",
+    appearanceLabel: "Appearance",
+    appearanceTheme: "Theme",
+    appearanceAccent: "Accent"
   },
   zh: {
     appTitle: "Codex 多账号隔离管理器",
@@ -72,7 +75,10 @@ const translations = {
     confirmDelete: "确认注销该 Profile 账号？专属凭据隔离物理目录也将被注销。",
     confirmStopAll: "确认一键关闭所有由本管理器启动的 Codex 实例？",
     duplicateNameError: "已存在同名 Profile 账号，请输入唯一的名称。",
-    codexNotFound: "未在系统标准路径检测到 Codex 桌面客户端，请确保已安装 Codex App。"
+    codexNotFound: "未在系统标准路径检测到 Codex 桌面客户端，请确保已安装 Codex App。",
+    appearanceLabel: "外观",
+    appearanceTheme: "主题",
+    appearanceAccent: "强调色"
   },
   es: {
     appTitle: "Administrador de Cuentas Codex",
@@ -107,7 +113,10 @@ const translations = {
     confirmDelete: "¿Está seguro de eliminar el perfil '{name}'? Se eliminará su directorio aislado.",
     confirmStopAll: "¿Está seguro de detener todas las instancias activas de Codex?",
     duplicateNameError: "Ya existe un perfil con este nombre. Por favor use un nombre único.",
-    codexNotFound: "No se encontró la aplicación Codex en las ubicaciones estándar del sistema."
+    codexNotFound: "No se encontró la aplicación Codex en las ubicaciones estándar del sistema.",
+    appearanceLabel: "Apariencia",
+    appearanceTheme: "Tema",
+    appearanceAccent: "Acento"
   }
 };
 
@@ -155,7 +164,32 @@ const projectPathInput = document.getElementById('projectPath');
 const browsePathBtn = document.getElementById('browsePathBtn');
 const colorOptions = document.querySelectorAll('.color-option');
 
+// 外观（主题 / 强调色）DOM
+const themeSwatchEls = document.querySelectorAll('.theme-swatch');
+const accentPicker = document.getElementById('accentPicker');
+const accentHex = document.getElementById('accentHex');
+const appearanceBtn = document.getElementById('appearanceBtn');
+const appearancePopover = document.getElementById('appearancePopover');
+const DEFAULT_ACCENT = '#6e8ef2';
+
 let selectedColor = '#007AFF';
+
+// 应用主题 / 强调色并持久化
+function applyTheme(name) {
+  document.documentElement.dataset.theme = name;
+  localStorage.setItem('codex_manager_theme', name);
+  themeSwatchEls.forEach(el => el.classList.toggle('active', el.dataset.theme === name));
+}
+function applyAccent(color) {
+  const c = (color || DEFAULT_ACCENT).toLowerCase();
+  document.documentElement.style.setProperty('--accent', c);
+  localStorage.setItem('codex_manager_accent', c);
+  if (accentPicker) accentPicker.value = c;
+  if (accentHex) accentHex.textContent = c;
+}
+// 尽早应用（模块在解析后、DOMContentLoaded 前执行），减少闪烁
+applyTheme(localStorage.getItem('codex_manager_theme') || 'slate');
+applyAccent(localStorage.getItem('codex_manager_accent') || DEFAULT_ACCENT);
 
 // i18n 辅助函数
 function t(key, vars = {}) {
@@ -177,6 +211,10 @@ function updateUILanguage() {
     el.placeholder = t(key);
   });
 
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.title = t(el.getAttribute('data-i18n-title'));
+  });
+
   if (langSelect) {
     langSelect.value = currentLang;
   }
@@ -188,6 +226,7 @@ function updateUILanguage() {
 // 初始化与键盘快捷键
 document.addEventListener('DOMContentLoaded', () => {
   initEventListeners();
+  initAppearance();
   initKeyboardShortcuts();
   updateUILanguage();
   loadData();
@@ -205,10 +244,28 @@ function initKeyboardShortcuts() {
       e.preventDefault();
       searchInput.focus();
     }
-    // 按 'Esc' 关闭 Modal
-    if (e.key === 'Escape' && !modalOverlay.classList.contains('hidden')) {
-      closeModal();
+    // 按 'Esc' 关闭 Modal / 外观面板
+    if (e.key === 'Escape') {
+      if (!modalOverlay.classList.contains('hidden')) closeModal();
+      else if (appearancePopover && !appearancePopover.classList.contains('hidden')) appearancePopover.classList.add('hidden');
     }
+  });
+}
+
+// 外观面板：主题切换 + 自定义强调色
+function initAppearance() {
+  appearanceBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    appearancePopover.classList.toggle('hidden');
+  });
+  themeSwatchEls.forEach(el => {
+    el.addEventListener('click', () => applyTheme(el.dataset.theme));
+  });
+  accentPicker.addEventListener('input', (e) => applyAccent(e.target.value));
+  // 点击面板外部关闭
+  document.addEventListener('click', (e) => {
+    if (appearancePopover.classList.contains('hidden')) return;
+    if (!e.target.closest('.popover-wrap')) appearancePopover.classList.add('hidden');
   });
 }
 

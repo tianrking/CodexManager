@@ -41,6 +41,32 @@
           </select>
         </div>
 
+        <!-- Appearance: theme + accent -->
+        <div class="popover-wrap">
+          <button id="appearanceBtn" class="btn btn-secondary btn-icon" data-i18n-title="appearanceLabel" title="Appearance" aria-label="Appearance">
+            <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
+          </button>
+          <div id="appearancePopover" class="popover hidden" role="dialog" aria-label="Appearance">
+            <div class="popover-section">
+              <div class="popover-label" data-i18n="appearanceTheme">Theme</div>
+              <div class="theme-swatches" id="themeSwatches">
+                <button class="theme-swatch" data-theme="slate" title="Slate" style="--s1:#0d0d0f;--s2:#17171a"></button>
+                <button class="theme-swatch" data-theme="graphite" title="Graphite" style="--s1:#100f0d;--s2:#1d1a17"></button>
+                <button class="theme-swatch" data-theme="midnight" title="Midnight" style="--s1:#0a0e16;--s2:#141a2a"></button>
+                <button class="theme-swatch" data-theme="oled" title="OLED Black" style="--s1:#000000;--s2:#101010"></button>
+                <button class="theme-swatch" data-theme="daylight" title="Daylight" style="--s1:#f4f4f6;--s2:#ffffff"></button>
+              </div>
+            </div>
+            <div class="popover-section">
+              <div class="popover-label" data-i18n="appearanceAccent">Accent</div>
+              <div class="accent-row">
+                <input type="color" id="accentPicker" value="#6e8ef2" aria-label="Accent color" />
+                <span class="accent-hint" id="accentHex">#6e8ef2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Status Badge -->
         <div class="status-badge">
           <span class="dot" id="statusDot"></span>

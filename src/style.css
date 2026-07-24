@@ -16,6 +16,7 @@
   --border:        rgba(255, 255, 255, 0.07);
   --border-strong: rgba(255, 255, 255, 0.13);
   --border-focus:  rgba(255, 255, 255, 0.22);
+  --glow:          rgba(255, 255, 255, 0.022);   /* 顶部微光，随主题切换 */
 
   /* —— 文字 —— */
   --text:          #e8e8eb;
@@ -45,6 +46,36 @@
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Menlo", monospace;
 }
 
+/* ============================================================
+   主题预设（Mac 高端感）—— 仅覆盖中性调色板；
+   --accent 由用户独立选择，不被主题覆盖。
+   slate = :root 默认值，其余通过 data-theme 切换。
+   ============================================================ */
+[data-theme="graphite"] {
+  --bg:#100f0d; --bg-elevated:#181614; --surface:#1d1a17; --surface-2:#25211d; --surface-3:#2e2924;
+  --border:rgba(255,245,235,0.07); --border-strong:rgba(255,245,235,0.13); --border-focus:rgba(255,245,235,0.22);
+  --glow:rgba(255,235,210,0.025);
+  --text:#ece6df; --text-dim:#a59c92; --text-mute:#6b6258;
+}
+[data-theme="midnight"] {
+  --bg:#0a0e16; --bg-elevated:#0f1421; --surface:#141a2a; --surface-2:#1b2236; --surface-3:#232c45;
+  --border:rgba(200,220,255,0.07); --border-strong:rgba(200,220,255,0.14); --border-focus:rgba(200,220,255,0.24);
+  --glow:rgba(120,160,255,0.04);
+  --text:#e6ecf8; --text-dim:#94a2bd; --text-mute:#5d6a85;
+}
+[data-theme="oled"] {
+  --bg:#000000; --bg-elevated:#0a0a0a; --surface:#101010; --surface-2:#181818; --surface-3:#222222;
+  --border:rgba(255,255,255,0.08); --border-strong:rgba(255,255,255,0.16); --border-focus:rgba(255,255,255,0.26);
+  --glow:rgba(255,255,255,0.03);
+  --text:#ededed; --text-dim:#9a9a9a; --text-mute:#5e5e5e;
+}
+[data-theme="daylight"] {
+  --bg:#f4f4f6; --bg-elevated:#fafafb; --surface:#ffffff; --surface-2:#eeeef1; --surface-3:#e4e4e8;
+  --border:rgba(0,0,0,0.08); --border-strong:rgba(0,0,0,0.13); --border-focus:rgba(0,0,0,0.22);
+  --glow:rgba(0,0,0,0.018);
+  --text:#1d1d1f; --text-dim:#55555c; --text-mute:#86868d;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -65,7 +96,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   /* 极淡的顶部高光，避免纯黑发闷（单层，几乎零开销） */
   background-image: radial-gradient(120% 80% at 50% -10%,
-                    rgba(255, 255, 255, 0.022) 0%,
+                    var(--glow) 0%,
                     transparent 60%);
 }
 
@@ -304,8 +335,8 @@ body {
   border-color: var(--border-strong);
 }
 .card.drag-over {
-  border-color: rgba(110, 142, 242, 0.5);
-  background: rgba(110, 142, 242, 0.08);
+  border-color: var(--accent);
+  background: var(--surface-3);
 }
 
 .card-header {
@@ -568,6 +599,73 @@ body {
   color: var(--text-mute);
   max-width: 280px;
   line-height: 1.45;
+}
+
+/* ===================== Appearance Popover ===================== */
+.popover-wrap { position: relative; }
+
+.popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 90;
+  width: 232px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: pop var(--dur) var(--ease);
+}
+.popover-section { display: flex; flex-direction: column; gap: 9px; }
+.popover-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-mute);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.theme-swatches { display: flex; gap: 9px; }
+.theme-swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--s1) 0% 50%, var(--s2) 50% 100%);
+  border: 2px solid var(--border);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.theme-swatch:hover { transform: scale(1.1); }
+.theme-swatch.active { border-color: var(--accent); }
+.theme-swatch.active::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.7);
+}
+
+.accent-row { display: flex; align-items: center; gap: 10px; }
+#accentPicker {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  padding: 2px;
+}
+#accentPicker::-webkit-color-swatch-wrapper { padding: 0; }
+#accentPicker::-webkit-color-swatch { border: none; border-radius: 3px; }
+.accent-hint {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  color: var(--text-dim);
 }
 
 /* ===================== Misc ===================== */

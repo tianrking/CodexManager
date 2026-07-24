@@ -1,138 +1,165 @@
 <div align="center">
 
-# 🚀 Codex Manager
+# CodexManager
 
-**Cross-Platform Multi-Account Isolation Manager for Codex App**
+**Run separate Codex Desktop profiles side by side.**
 
-Created & Maintained by **[@tianrking](https://github.com/tianrking)**
+Local-first session isolation, native process control, and a practical system-tray workflow — built with Tauri 2 and Rust.
 
-[![Author](https://img.shields.io/badge/Author-tianrking-black?style=for-the-badge&logo=github)](https://github.com/tianrking)
-[![CI Status](https://img.shields.io/github/actions/workflow/status/tianrking/CodexManager/ci.yml?branch=main&style=for-the-badge&logo=github-actions&logoColor=white&label=CI)](https://github.com/tianrking/CodexManager/actions)
-[![Tauri 2.0](https://img.shields.io/badge/Tauri-2.0-blue?style=for-the-badge&logo=tauri&logoColor=white)](https://tauri.app/)
-[![Rust Engine](https://img.shields.io/badge/Rust-Backend-orange?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
-[![Vite](https://img.shields.io/badge/Vite-Frontend-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey?style=for-the-badge)](https://github.com/tianrking/CodexManager)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/tianrking/CodexManager/ci.yml?branch=main&style=flat-square&logo=github-actions&label=CI)](https://github.com/tianrking/CodexManager/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tianrking/CodexManager?display_name=tag&style=flat-square)](https://github.com/tianrking/CodexManager/releases)
+[![Tauri](https://img.shields.io/badge/Tauri-2-24C8DB?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app/)
+[![License](https://img.shields.io/github/license/tianrking/CodexManager?style=flat-square)](LICENSE)
 
-<p align="center">
-  Concurrent Multi-Account Support • Independent Session Storage • Native System Access
-</p>
-
----
-
-[ **English** | [简体中文](README_CN.md) | [Español](README_ES.md) ]
+[English](README.md) · [简体中文](README_CN.md) · [Español](README_ES.md)
 
 </div>
 
----
+![CodexManager profile dashboard](docs/images/codex-manager-dashboard.png)
 
-## 📖 Introduction
+## Why CodexManager?
 
-Official Codex Desktop Apps store authentication tokens, configuration, and Device IDs in a shared global directory (`~/.codex` or system Keyrings). Logging into a different account overwrites the local session and forces existing instances offline.
+Codex Desktop normally uses one set of local application data. Signing into another account can replace that local session or collide with an already-running instance.
 
-**Codex Manager** is a desktop utility built with **Tauri 2** and **Rust**. It allows running multiple Codex Desktop App instances concurrently by redirecting environment variables (`HOME`, `CODEX_HOME`, `TMPDIR`, and `--user-data-dir`) per profile.
+CodexManager gives every profile a stable, independent data directory and launches Codex with profile-specific environment variables and user data. Your projects stay on the host machine; the account session, caches, temporary files, and application state stay in the selected profile.
 
-The tool isolates authentication sessions while allowing instances to retain access to host project files, terminal environment, Git/SSH configurations, and Docker socket.
+The two profiles created on first launch are just editable starter slots. Rename them, change their colors and project paths, or add and remove profiles as needed. Once you sign in through a slot, that login remains associated with the slot's persistent profile ID.
 
----
+## Highlights
 
-## 🎯 Use Cases
+- **Independent sessions** — separate `CODEX_HOME`, application data, user data, cache, and temporary directories.
+- **Concurrent windows** — run work, personal, or client profiles at the same time.
+- **Windows Store support** — prepares a shared, versioned runtime copy that can be launched with isolated profile environments.
+- **Interactive system tray** — left-click for the profile popover; launch or stop a profile, open the main window, stop all instances, or quit.
+- **Reliable process cleanup** — stops the complete process tree that belongs to a profile.
+- **Project-aware launch** — assign a default project folder or drag a folder onto a profile card.
+- **Host developer access** — preserves access to the host project files and links the host Git/SSH configuration where supported.
+- **Local configuration** — no manager account, no cloud database, and no telemetry added by CodexManager.
+- **Polished desktop UI** — English, Simplified Chinese, and Spanish; multiple themes; editable accent and soft profile colors.
 
-- **Work & Personal Accounts**: Run enterprise and personal accounts simultaneously without logging out.
-- **Client Project Isolation**: Keep client repositories and authentication tokens separated into distinct profiles.
-- **Rate Limit & Quota Rotation**: Switch to an alternative account profile when reaching quota or rate limits.
-- **Unrestricted Local Environment**: Keep host `~/.gitconfig` and `~/.ssh` access so AI Agents can commit code and access remotes normally.
+## Quick start
 
----
+### Windows
 
-## ✨ Features
+1. Install the current [Codex Desktop](https://openai.com/codex/) app.
+2. Download the `.msi` or `-setup.exe` package from [Releases](https://github.com/tianrking/CodexManager/releases).
+3. Start CodexManager and click **Launch** on a profile.
+4. Sign in to Codex in the opened window. Repeat with another profile for a second independent session.
+5. Close the manager window when you are done configuring it. CodexManager stays available in the notification area.
 
-- 🌐 **GUI Language Switcher**: Built-in support for English, 简体中文, and Español.
-- 🔄 **Multi-Instance Support**: Open multiple Codex windows with independent session directories.
-- 🛡️ **Environment Isolation**: Separate `HOME`, `CODEX_HOME`, `--user-data-dir`, `TMPDIR`, and cache folders per profile.
-- 🔑 **Git & SSH Linking**: Automatically links host `~/.gitconfig` and `~/.ssh` into profile directories.
-- ⚡ **Process Termination**: Finds the profile's root process by its isolated path and stops the complete helper/renderer process tree.
-- 🖥️ **System Tray Controls**: Launch or stop profiles, stop all instances, and show or hide the main window from the Windows notification area; closing the main window hides it to the tray.
-- 📁 **Folder Drag & Drop**: Drag a project folder onto a profile card to launch Codex scoped to that directory.
-- 🔍 **Data Directory Access**: Open a profile's physical data folder in Finder, File Explorer, or xdg-open.
+Left-click the tray icon to open the compact profile controller. Right-click it for the native menu.
 
----
+> On the first launch of a Microsoft Store installation, CodexManager copies the installed Codex runtime to a reusable location under `%USERPROFILE%\.codex_manager\runtime`. The tested Store build requires roughly 1.8 GiB of additional disk space. Profile credentials and application data are not stored in that shared runtime.
 
-## 📐 Isolation Mechanics
+### macOS and Linux
 
-```
-                        +---------------------------------------+
-                        |     Codex Manager GUI (Tauri App)     |
-                        +-------------------+-------------------+
-                                            |
-                                            v
-                        +---------------------------------------+
-                        |        Rust Process Engine            |
-                        +-------------------+-------------------+
-                                            |
-         +----------------------------------+----------------------------------+
-         |                                  |                                  |
- [ Profile: Work ]                 [ Profile: Personal ]             [ Profile: Client-A ]
- - HOME: ~/.codex_manager/p1       - HOME: ~/.codex_manager/p2       - HOME: ~/.codex_manager/p3
- - UserData: .../p1/userdata       - UserData: .../p2/userdata       - UserData: .../p3/userdata
- - Temp Socket: .../p1/tmp         - Temp Socket: .../p2/tmp         - Temp Socket: .../p3/tmp
-         |                                  |                                  |
-         +----------------------------------+----------------------------------+
-                                            |
-                                            v
-                        [ Host System Resources & Git/Docker ]
-```
+Install or build CodexManager, start it, and launch a profile from the dashboard. CodexManager locates common Codex application paths and applies the same profile separation model.
 
-### Technical Redirections
+## What is isolated?
 
-| Dimension | Redirection Parameter | Purpose |
-| :--- | :--- | :--- |
-| **Auth & Session** | `--user-data-dir=<profile>/userdata` | Isolates session storage and bypasses single-instance lock. |
-| **Global Config** | `HOME=<profile>` & `CODEX_HOME=<profile>/.codex` | Isolates global CLI settings and Device ID generation. |
-| **Shared IPC Socket**| `TMPDIR=<profile>/tmp` (macOS/Linux) / `TMP` (Win) | Prevents Electron instances from sharing IPC sockets. |
-| **Keyring Collision** | `NODE_KEYRING_DISABLE=1` & `--password-store=basic` | Uses file-based token storage to prevent keyring collisions. |
-| **Git/SSH Preservation**| Symlink `~/.gitconfig` & `~/.ssh` | Maintains host Git and SSH credentials for local commits. |
+| Data or capability | Per profile | Shared with the host |
+| --- | :---: | :---: |
+| Codex authentication and application state | Yes | No |
+| `CODEX_HOME` | Yes | No |
+| Browser/Electron user data | Yes | No |
+| AppData, cache, and temporary files | Yes | No |
+| Default project path | Yes | The selected host folder |
+| Project files | No | Yes |
+| Git configuration and SSH directory | Linked where supported | Yes |
+| Windows Store runtime files | No | Shared read-only source copy |
 
----
-
-## 🛠️ Build & Installation
-
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v20.19+)
-- [Rust & Cargo](https://www.rust-lang.org/) (1.75+)
-- Windows: the Microsoft Store build of Codex Desktop, or a standalone `ChatGPT.exe` / `Codex.exe` selected through `CODEX_DESKTOP_PATH`
-
-### First launch on Windows
-
-The protected Microsoft Store installation cannot be started directly by a normal process with per-profile environment variables. On the first Windows profile launch, Codex Manager copies the currently installed Codex runtime to:
+Profile data is stored under:
 
 ```text
-%USERPROFILE%\.codex_manager\runtime\<Store package version>\app
+~/.codex_manager/
+├── config.json
+├── profiles/
+│   └── <profile-id>/
+│       ├── .codex/
+│       ├── userdata/
+│       ├── cache/
+│       └── tmp/
+└── runtime/                  # Windows Store runtime copies
 ```
 
-All profiles share this runtime copy, while `CODEX_HOME`, AppData, caches, and sessions remain isolated in each profile directory. The initial copy needs roughly the same disk space as Codex Desktop (about 1.8 GiB for the currently tested build); later launches reuse it. After Microsoft Store installs a new Codex version, the next launch prepares a new versioned runtime.
+Deleting a profile from CodexManager also removes that profile's isolated directory. This does not delete the project folder assigned to the profile.
 
-### Development Mode
+## How it works
+
+```mermaid
+flowchart LR
+    UI["Dashboard and tray"] --> Engine["Rust profile launcher"]
+    Engine --> Work["Work profile<br/>isolated HOME / CODEX_HOME / user data"]
+    Engine --> Personal["Personal profile<br/>isolated HOME / CODEX_HOME / user data"]
+    Engine --> Client["Client profile<br/>isolated HOME / CODEX_HOME / user data"]
+    Work --> Host["Host projects and developer tools"]
+    Personal --> Host
+    Client --> Host
+```
+
+The launcher assigns profile-specific values for `HOME`, `CODEX_HOME`, AppData/cache directories, and `--user-data-dir`. It also disables shared keyring usage for the launched Electron process so one profile does not overwrite another profile's stored session.
+
+On Windows, Store packages live in a protected installation directory and cannot be launched normally with the required custom environment. CodexManager discovers the installed package and prepares one versioned runtime copy. All profiles use that application runtime while retaining separate writable data directories.
+
+To use a standalone Windows build instead, set `CODEX_DESKTOP_PATH` to the executable, installation root, or package root before starting CodexManager:
+
+```powershell
+$env:CODEX_DESKTOP_PATH = "C:\Path\To\Codex.exe"
+npx tauri dev
+```
+
+## Development
+
+### Requirements
+
+- Node.js 20.19 or later
+- Rust stable
+- Platform prerequisites from the [Tauri prerequisites guide](https://v2.tauri.app/start/prerequisites/)
 
 ```bash
 git clone https://github.com/tianrking/CodexManager.git
 cd CodexManager
-
-npm install
+npm ci
 npx tauri dev
 ```
 
-### Building Release
+Build production installers:
 
 ```bash
 npm run build
 npx tauri build
 ```
 
-Standalone packages (`.app`, `.dmg`, `.exe`, `.msi`, `.deb`, `.AppImage`) will be generated under `src-tauri/target/release/bundle/`.
+Artifacts are written below `src-tauri/target/release/bundle/`.
 
----
+## Quality gates
 
-## 📄 License
+Every push and pull request is checked on Windows, macOS, and Linux. CI runs:
 
-Distributed under the MIT License. Maintained by **[@tianrking](https://github.com/tianrking)**. See [`LICENSE`](LICENSE) for details.
+```bash
+npm ci
+npm audit --audit-level=high
+npm run build
+cargo fmt --all -- --check
+cargo clippy --all-targets --locked -- -D warnings
+cargo check --locked
+cargo test --locked --verbose
+```
+
+Tagged versions are built by the release workflow for all three desktop platforms. Dependabot monitors npm, Cargo, and GitHub Actions dependencies weekly.
+
+## Security and limitations
+
+- CodexManager separates local application data; it is not an operating-system sandbox.
+- Launched Codex processes can access host project folders and any host resources permitted by your user account.
+- Git and SSH settings are intentionally shared or linked so developer workflows continue to work.
+- Anyone with access to your operating-system account may be able to read local profile data. Use full-disk encryption and a protected user account for sensitive environments.
+- Platform packaging and Store internals can change. If Codex is not detected, use `CODEX_DESKTOP_PATH` and include your platform details when reporting an issue.
+
+## Contributing
+
+Issues and focused pull requests are welcome. Please include the operating system, Codex installation source, reproduction steps, and relevant logs for launch or process-management problems.
+
+## License
+
+[MIT](LICENSE) © [tianrking](https://github.com/tianrking)

@@ -88,20 +88,20 @@ impl ProfileStore {
                 }
             }
         }
-        
+
         let default_profiles = vec![
             Profile {
                 id: "work_account".to_string(),
                 name: "Work Account".to_string(),
                 note: "工作/公司项目 Profile (凭据+环境彻底隔离)".to_string(),
-                color: "#007AFF".to_string(),
+                color: "#8EA8F8".to_string(),
                 default_project_path: None,
             },
             Profile {
                 id: "personal_account".to_string(),
                 name: "Personal Account".to_string(),
                 note: "个人开源与私有项目 (独立 Session)".to_string(),
-                color: "#34C759".to_string(),
+                color: "#7FD1A5".to_string(),
                 default_project_path: None,
             },
         ];

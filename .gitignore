@@ -20,6 +20,8 @@ src-tauri/target/
 
 # Local data & logs
 .codex_manager/
+.playwright-cli/
+output/
 *.log
 
 # Tauri generated (build artifacts + mobile icons; desktop-only app)

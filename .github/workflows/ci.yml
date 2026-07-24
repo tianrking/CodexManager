@@ -5,11 +5,20 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     name: Build & Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
@@ -31,6 +40,13 @@ jobs:
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Rust Build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
 
       - name: Install System Dependencies (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -46,7 +62,7 @@ jobs:
             libjavascriptcoregtk-4.1-dev
 
       - name: Install Frontend Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Audit Frontend Dependencies
         run: npm audit --audit-level=high
@@ -54,8 +70,18 @@ jobs:
       - name: Build Frontend
         run: npm run build
 
-      - name: Run Cargo Check & Unit Tests
+      - name: Check Rust Formatting
         working-directory: ./src-tauri
-        run: |
-          cargo check
-          cargo test --verbose
+        run: cargo fmt --all -- --check
+
+      - name: Lint Rust
+        working-directory: ./src-tauri
+        run: cargo clippy --all-targets --locked -- -D warnings
+
+      - name: Check Rust
+        working-directory: ./src-tauri
+        run: cargo check --locked
+
+      - name: Run Rust Unit Tests
+        working-directory: ./src-tauri
+        run: cargo test --locked --verbose

@@ -173,14 +173,14 @@ let localProfiles = [
     id: "work_account",
     name: "Work Account",
     note: "Work / Corporate Profile (Isolated Auth)",
-    color: "#007AFF",
+    color: "#8EA8F8",
     default_project_path: ""
   },
   {
     id: "personal_account",
     name: "Personal Account",
     note: "Personal Open Source & Private Projects",
-    color: "#34C759",
+    color: "#7FD1A5",
     default_project_path: ""
   }
 ];
@@ -216,7 +216,7 @@ const appearanceBtn = document.getElementById('appearanceBtn');
 const appearancePopover = document.getElementById('appearancePopover');
 const DEFAULT_ACCENT = '#6e8ef2';
 
-let selectedColor = '#007AFF';
+let selectedColor = '#8EA8F8';
 
 // 应用主题 / 强调色并持久化
 function applyTheme(name) {
@@ -741,14 +741,14 @@ function openModal(profile = null) {
     profileNameInput.value = profile.name;
     profileNoteInput.value = profile.note || "";
     projectPathInput.value = profile.default_project_path || "";
-    selectedColor = profile.color || "#007AFF";
+    selectedColor = profile.color || "#8EA8F8";
   } else {
     modalTitle.textContent = t('modalAddTitle');
     editProfileId.value = "";
     profileNameInput.value = "";
     profileNoteInput.value = "";
     projectPathInput.value = "";
-    selectedColor = "#007AFF";
+    selectedColor = "#8EA8F8";
   }
 
   colorOptions.forEach(o => {

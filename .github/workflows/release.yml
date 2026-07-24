@@ -6,9 +6,15 @@ on:
       - 'v*'
   workflow_dispatch:
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     name: Build & Publish Release
+    runs-on: ${{ matrix.platform }}
+    timeout-minutes: 60
     permissions:
       contents: write
     strategy:
@@ -22,7 +28,6 @@ jobs:
           - platform: 'windows-latest'
             args: ''
 
-    runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -35,6 +40,15 @@ jobs:
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Apple Silicon Target
+        if: matrix.platform == 'macos-latest'
+        run: rustup target add aarch64-apple-darwin
+
+      - name: Cache Rust Build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
 
       - name: Install System Dependencies (Linux)
         if: matrix.platform == 'ubuntu-latest'
@@ -50,7 +64,10 @@ jobs:
             libjavascriptcoregtk-4.1-dev
 
       - name: Install Frontend Dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Audit Frontend Dependencies
+        run: npm audit --audit-level=high
 
       - name: Build Tauri Bundles & Create Release
         uses: tauri-apps/tauri-action@v0

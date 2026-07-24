@@ -1,12 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod profile;
 mod launcher;
+mod profile;
 mod tray;
 
-use profile::{Profile, ProfileStore};
 use launcher::LauncherEngine;
+use profile::{Profile, ProfileStore};
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::Manager;
@@ -97,6 +97,22 @@ fn get_app_info(app: tauri::AppHandle) -> AppInfo {
     }
 }
 
+/// 显示并聚焦主窗口（从托盘弹出窗调用）
+#[tauri::command]
+fn show_main_window(app: tauri::AppHandle) {
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.show();
+        let _ = win.unminimize();
+        let _ = win.set_focus();
+    }
+}
+
+/// 退出应用
+#[tauri::command]
+fn quit_app(app: tauri::AppHandle) {
+    app.exit(0);
+}
+
 fn main() {
     let loaded = ProfileStore::load_profiles();
     let state = AppState {
@@ -140,7 +156,9 @@ fn main() {
             open_profile_dir,
             stop_profile,
             stop_all_profiles,
-            get_app_info
+            get_app_info,
+            show_main_window,
+            quit_app
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

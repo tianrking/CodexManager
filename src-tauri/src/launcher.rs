@@ -19,40 +19,61 @@ impl LauncherEngine {
 
         #[cfg(target_os = "macos")]
         {
-            let mut cmd = Command::new("open");
-            cmd.arg("-n");
-            
-            let default_paths = [
-                "/Applications/Codex.app",
-                "/Applications/OpenAI Codex.app",
-            ];
-            let mut app_arg = "Codex".to_string();
-            for path in default_paths {
-                if std::path::Path::new(path).exists() {
-                    app_arg = path.to_string();
-                    break;
+            let bundle = locate_app_bundle();
+
+            // 首选：直接启动 bundle 内的二进制 —— 唯一能保证 HOME / CODEX_HOME / TMPDIR
+            // 等环境变量被 Codex 进程真正继承的方式（open 命令经 LaunchServices 会丢失环境变量）。
+            if let Some(bundle_path) = bundle.as_ref() {
+                if let Some(exec) = resolve_macos_executable(bundle_path) {
+                    let mut cmd = Command::new(&exec);
+                    cmd.env("HOME", &profile_dir);
+                    cmd.env("CODEX_HOME", profile_dir.join(".codex"));
+                    cmd.env("XDG_CONFIG_HOME", profile_dir.join(".config"));
+                    cmd.env("TMPDIR", &tmp_dir);
+                    cmd.env("NODE_KEYRING_DISABLE", "1");
+
+                    cmd.arg(format!("--user-data-dir={}", userdata_dir.display()));
+                    cmd.arg(format!("--disk-cache-dir={}", cache_dir.join("disk").display()));
+                    cmd.arg(format!("--crash-dumps-dir={}", cache_dir.join("crashes").display()));
+                    cmd.arg("--password-store=basic");
+
+                    if let Some(path) = project_path.as_ref() {
+                        if !path.trim().is_empty() {
+                            cmd.arg(path);
+                        }
+                    }
+
+                    match cmd.spawn() {
+                        Ok(_) => return true,
+                        Err(e) => eprintln!(
+                            "Direct binary launch failed ({}, env isolation degraded -> fallback to open): {}",
+                            exec.display(),
+                            e
+                        ),
+                    }
                 }
             }
+
+            // 兜底：open -n。环境变量隔离可能不生效，但保证至少能拉起应用。
+            let mut cmd = Command::new("open");
+            cmd.arg("-n");
+            let app_arg = bundle
+                .as_ref()
+                .map(|b| b.to_string_lossy().to_string())
+                .unwrap_or_else(|| "Codex".to_string());
             cmd.arg("-a").arg(app_arg);
-            
-            // 细节 1：HOME / CODEX_HOME / CONFIG 重定向
             cmd.env("HOME", &profile_dir);
             cmd.env("CODEX_HOME", profile_dir.join(".codex"));
             cmd.env("XDG_CONFIG_HOME", profile_dir.join(".config"));
-            
-            // 细节 2：TMPDIR 强行重定向，隔绝 Electron 全局 Named Pipe / IPC Socket 冲突
             cmd.env("TMPDIR", &tmp_dir);
-            
-            // 细节 3：禁用 Keyring
             cmd.env("NODE_KEYRING_DISABLE", "1");
-            
             cmd.arg("--args");
             cmd.arg(format!("--user-data-dir={}", userdata_dir.display()));
             cmd.arg(format!("--disk-cache-dir={}", cache_dir.join("disk").display()));
             cmd.arg(format!("--crash-dumps-dir={}", cache_dir.join("crashes").display()));
             cmd.arg("--password-store=basic");
 
-            if let Some(path) = project_path {
+            if let Some(path) = project_path.as_ref() {
                 if !path.trim().is_empty() {
                     cmd.arg(path);
                 }
@@ -61,7 +82,7 @@ impl LauncherEngine {
             match cmd.spawn() {
                 Ok(_) => true,
                 Err(e) => {
-                    eprintln!("Failed to launch macOS process: {}", e);
+                    eprintln!("Failed to launch via open: {}", e);
                     false
                 }
             }
@@ -181,6 +202,69 @@ impl LauncherEngine {
                 .status();
         }
     }
+}
+
+/// 在标准位置查找已安装的 Codex 应用 bundle（结构化为独立函数，便于未来扩展到多 Agent）。
+#[cfg(target_os = "macos")]
+fn locate_app_bundle() -> Option<std::path::PathBuf> {
+    let candidates = [
+        std::path::PathBuf::from("/Applications/Codex.app"),
+        std::path::PathBuf::from("/Applications/OpenAI Codex.app"),
+    ];
+    for c in &candidates {
+        if c.exists() {
+            return Some(c.clone());
+        }
+    }
+    if let Some(home) = dirs::home_dir() {
+        let home_candidates = [
+            home.join("Applications/Codex.app"),
+            home.join("Applications/OpenAI Codex.app"),
+        ];
+        for c in &home_candidates {
+            if c.exists() {
+                return Some(c.clone());
+            }
+        }
+    }
+    None
+}
+
+/// 解析 .app bundle 内的可执行文件路径：优先读 Info.plist 的 CFBundleExecutable，
+/// 兜底取 Contents/MacOS 下第一个文件。直接启动该二进制才能让环境变量真正被子进程继承。
+#[cfg(target_os = "macos")]
+fn resolve_macos_executable(bundle: &std::path::Path) -> Option<std::path::PathBuf> {
+    // 1. 读取 Info.plist 的 CFBundleExecutable
+    let info_plist = bundle.join("Contents/Info.plist");
+    if info_plist.exists() {
+        if let Ok(out) = Command::new("/usr/bin/defaults")
+            .arg("read")
+            .arg(info_plist.to_string_lossy().to_string())
+            .arg("CFBundleExecutable")
+            .output()
+        {
+            if out.status.success() {
+                let name = String::from_utf8_lossy(&out.stdout).trim().to_string();
+                if !name.is_empty() {
+                    let exec = bundle.join("Contents/MacOS").join(&name);
+                    if exec.exists() {
+                        return Some(exec);
+                    }
+                }
+            }
+        }
+    }
+    // 2. 兜底：Contents/MacOS 下第一个文件
+    let macos_dir = bundle.join("Contents/MacOS");
+    if let Ok(entries) = std::fs::read_dir(&macos_dir) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.is_file() {
+                return Some(p);
+            }
+        }
+    }
+    None
 }
 
 /// 解析全量进程命令行的强力函数 (解决 macOS ps 命令行截断问题)

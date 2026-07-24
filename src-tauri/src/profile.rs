@@ -2,6 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+const WORK_PROFILE_COLOR: &str = "#8EA8F8";
+const PERSONAL_PROFILE_COLOR: &str = "#7FD1A5";
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Profile {
     pub id: String,
@@ -82,8 +85,11 @@ impl ProfileStore {
     pub fn load_profiles() -> Vec<Profile> {
         let file = Self::get_config_file();
         if file.exists() {
-            if let Ok(content) = fs::read_to_string(file) {
-                if let Ok(profiles) = serde_json::from_str::<Vec<Profile>>(&content) {
+            if let Ok(content) = fs::read_to_string(&file) {
+                if let Ok(mut profiles) = serde_json::from_str::<Vec<Profile>>(&content) {
+                    if migrate_legacy_default_colors(&mut profiles) {
+                        Self::save_profiles(&profiles);
+                    }
                     return profiles;
                 }
             }
@@ -94,14 +100,14 @@ impl ProfileStore {
                 id: "work_account".to_string(),
                 name: "Work Account".to_string(),
                 note: "工作/公司项目 Profile (凭据+环境彻底隔离)".to_string(),
-                color: "#8EA8F8".to_string(),
+                color: WORK_PROFILE_COLOR.to_string(),
                 default_project_path: None,
             },
             Profile {
                 id: "personal_account".to_string(),
                 name: "Personal Account".to_string(),
                 note: "个人开源与私有项目 (独立 Session)".to_string(),
-                color: "#7FD1A5".to_string(),
+                color: PERSONAL_PROFILE_COLOR.to_string(),
                 default_project_path: None,
             },
         ];
@@ -118,6 +124,25 @@ impl ProfileStore {
             let _ = fs::write(file, json);
         }
     }
+}
+
+fn migrate_legacy_default_colors(profiles: &mut [Profile]) -> bool {
+    let mut changed = false;
+
+    for profile in profiles {
+        let replacement = match (profile.id.as_str(), profile.color.as_str()) {
+            ("work_account", "#007AFF") => Some(WORK_PROFILE_COLOR),
+            ("personal_account", "#34C759") => Some(PERSONAL_PROFILE_COLOR),
+            _ => None,
+        };
+
+        if let Some(color) = replacement {
+            profile.color = color.to_string();
+            changed = true;
+        }
+    }
+
+    changed
 }
 
 #[cfg(windows)]
@@ -152,5 +177,30 @@ mod tests {
     fn test_profile_store_persistence() {
         let profiles = ProfileStore::load_profiles();
         assert!(!profiles.is_empty());
+    }
+
+    #[test]
+    fn migrates_only_legacy_builtin_profile_colors() {
+        let mut profiles = vec![
+            Profile {
+                id: "work_account".to_string(),
+                name: "Work Account".to_string(),
+                note: String::new(),
+                color: "#007AFF".to_string(),
+                default_project_path: None,
+            },
+            Profile {
+                id: "custom".to_string(),
+                name: "Custom".to_string(),
+                note: String::new(),
+                color: "#007AFF".to_string(),
+                default_project_path: None,
+            },
+        ];
+
+        assert!(migrate_legacy_default_colors(&mut profiles));
+        assert_eq!(profiles[0].color, WORK_PROFILE_COLOR);
+        assert_eq!(profiles[1].color, "#007AFF");
+        assert!(!migrate_legacy_default_colors(&mut profiles));
     }
 }

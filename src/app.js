@@ -7,7 +7,7 @@ const translations = {
   en: {
     appTitle: "Codex Multi-Account Manager",
     appSubtitle: "Cross-Platform (macOS / Win / Linux) · Zero Session Overwrite · Native Agent Unrestricted",
-    searchPlaceholder: "Search Profile...",
+    searchPlaceholder: "Search Profile... (Press '/' to focus)",
     onlineCount: "{count} Online",
     stopAll: "Stop All",
     addProfile: "Add Profile",
@@ -35,12 +35,14 @@ const translations = {
     tipEdit: "Edit Profile",
     tipDelete: "Delete Profile",
     confirmDelete: "Are you sure you want to delete profile '{name}'? Its isolated credential directory will be removed.",
-    confirmStopAll: "Are you sure you want to stop all active Codex instances?"
+    confirmStopAll: "Are you sure you want to stop all active Codex instances?",
+    duplicateNameError: "A profile with this name already exists. Please use a unique name.",
+    codexNotFound: "Codex App was not found in standard system locations. Please ensure Codex Desktop App is installed."
   },
   zh: {
     appTitle: "Codex 多账号隔离管理器",
     appSubtitle: "跨平台支持 (macOS / Win / Linux) · 0 踢下线 · Agent 原生能力无损",
-    searchPlaceholder: "搜索 Profile 账号...",
+    searchPlaceholder: "搜索 Profile 账号... (按 '/' 聚焦)",
     onlineCount: "{count} 个在线中",
     stopAll: "全部停止",
     addProfile: "新增账号",
@@ -68,12 +70,14 @@ const translations = {
     tipEdit: "编辑 Profile",
     tipDelete: "删除 Profile",
     confirmDelete: "确认注销该 Profile 账号？专属凭据隔离物理目录也将被注销。",
-    confirmStopAll: "确认一键关闭所有由本管理器启动的 Codex 实例？"
+    confirmStopAll: "确认一键关闭所有由本管理器启动的 Codex 实例？",
+    duplicateNameError: "已存在同名 Profile 账号，请输入唯一的名称。",
+    codexNotFound: "未在系统标准路径检测到 Codex 桌面客户端，请确保已安装 Codex App。"
   },
   es: {
     appTitle: "Administrador de Cuentas Codex",
     appSubtitle: "Multiplataforma (macOS / Win / Linux) · Cero Cierre de Sesión · Agente Nativo Completo",
-    searchPlaceholder: "Buscar Perfil...",
+    searchPlaceholder: "Buscar Perfil... (Presione '/' para enfocar)",
     onlineCount: "{count} En línea",
     stopAll: "Detener Todo",
     addProfile: "Añadir Perfil",
@@ -101,7 +105,9 @@ const translations = {
     tipEdit: "Editar Perfil",
     tipDelete: "Eliminar Perfil",
     confirmDelete: "¿Está seguro de eliminar el perfil '{name}'? Se eliminará su directorio aislado.",
-    confirmStopAll: "¿Está seguro de detener todas las instancias activas de Codex?"
+    confirmStopAll: "¿Está seguro de detener todas las instancias activas de Codex?",
+    duplicateNameError: "Ya existe un perfil con este nombre. Por favor use un nombre único.",
+    codexNotFound: "No se encontró la aplicación Codex en las ubicaciones estándar del sistema."
   }
 };
 
@@ -125,6 +131,7 @@ let localProfiles = [
   }
 ];
 let localRunningPids = {};
+let pollingInterval = null;
 
 // DOM 节点引用
 const profileGrid = document.getElementById('profileGrid');
@@ -178,20 +185,39 @@ function updateUILanguage() {
   renderProfiles();
 }
 
-// 初始化
+// 初始化与键盘快捷键
 document.addEventListener('DOMContentLoaded', () => {
   initEventListeners();
+  initKeyboardShortcuts();
   updateUILanguage();
   loadData();
-  setInterval(fetchRunningStatus, 1500);
+  pollingInterval = setInterval(fetchRunningStatus, 1500);
 });
+
+window.addEventListener('beforeunload', () => {
+  if (pollingInterval) clearInterval(pollingInterval);
+});
+
+function initKeyboardShortcuts() {
+  document.addEventListener('keydown', (e) => {
+    // 按 '/' 快捷聚焦搜索框 (非输入状态下)
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      searchInput.focus();
+    }
+    // 按 'Esc' 关闭 Modal
+    if (e.key === 'Escape' && !modalOverlay.classList.contains('hidden')) {
+      closeModal();
+    }
+  });
+}
 
 function initEventListeners() {
   addProfileBtn.addEventListener('click', () => openModal());
   closeModalBtn.addEventListener('click', closeModal);
   cancelModalBtn.addEventListener('click', closeModal);
   
-  // 语言切换事件
+  // 语言切换
   langSelect.addEventListener('change', (e) => {
     currentLang = e.target.value;
     localStorage.setItem('codex_manager_lang', currentLang);
@@ -207,7 +233,7 @@ function initEventListeners() {
     });
   });
 
-  // 表单提交
+  // 表单提交与重名防呆校验
   profileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = editProfileId.value;
@@ -216,6 +242,13 @@ function initEventListeners() {
     const default_project_path = projectPathInput.value.trim();
 
     if (!name) return;
+
+    // 重名检查 (对非编辑项)
+    const isDuplicate = localProfiles.some(p => p.id !== id && p.name.toLowerCase() === name.toLowerCase());
+    if (isDuplicate) {
+      alert(t('duplicateNameError'));
+      return;
+    }
 
     const payload = {
       id: id || `profile_${Date.now()}`,
@@ -414,7 +447,10 @@ window.openProfileDir = async (id) => {
 
 window.launchProfile = async (id, customPath = null) => {
   if (invoke) {
-    await invoke('launch_profile', { profileId: id, projectPath: customPath || null });
+    const ok = await invoke('launch_profile', { profileId: id, projectPath: customPath || null });
+    if (!ok) {
+      alert(t('codexNotFound'));
+    }
   } else {
     localRunningPids[id] = 12345;
   }

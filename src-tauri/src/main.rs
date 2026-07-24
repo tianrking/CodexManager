@@ -3,14 +3,15 @@
 
 mod profile;
 mod launcher;
+mod tray;
 
 use profile::{Profile, ProfileStore};
 use launcher::LauncherEngine;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-struct AppState {
-    profiles: Mutex<Vec<Profile>>,
+pub(crate) struct AppState {
+    pub(crate) profiles: Mutex<Vec<Profile>>,
 }
 
 #[tauri::command]
@@ -82,6 +83,16 @@ fn main() {
     tauri::Builder::default()
         .manage(state)
         .plugin(tauri_plugin_dialog::init())
+        .setup(|app| {
+            tray::build_tray(app.handle())?;
+            // 后台定期重建菜单，及时反映运行状态变化（含外部进程退出）
+            let handle = app.handle().clone();
+            std::thread::spawn(move || loop {
+                std::thread::sleep(std::time::Duration::from_secs(2));
+                let _ = tray::rebuild_menu(&handle);
+            });
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             get_profiles,
             add_profile,

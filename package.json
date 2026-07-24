@@ -2,6 +2,8 @@
   "name": "codex-manager",
   "private": true,
   "version": "1.0.0",
+  "author": "tianrking <https://github.com/tianrking>",
+  "homepage": "https://github.com/tianrking/CodexManager",
   "type": "module",
   "scripts": {
     "dev": "vite",

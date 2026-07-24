@@ -2,7 +2,7 @@
 name = "codex_manager"
 version = "1.0.0"
 description = "Cross-platform Codex Multi-Account Manager"
-authors = ["Antigravity"]
+authors = ["tianrking <https://github.com/tianrking>"]
 edition = "2021"
 
 [build-dependencies]

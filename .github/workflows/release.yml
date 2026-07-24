@@ -60,6 +60,6 @@ jobs:
           tagName: v__VERSION__
           releaseName: 'CodexManager v__VERSION__'
           releaseBody: 'See the assets below to download CodexManager for your platform.'
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

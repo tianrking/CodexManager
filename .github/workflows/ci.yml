@@ -56,7 +56,7 @@ jobs:
       - name: Build Frontend
         run: npm run build
 
-      - name: Run Cargo Check & Tests
+      - name: Run Cargo Check & Unit Tests
         working-directory: ./src-tauri
         run: |
           cargo check

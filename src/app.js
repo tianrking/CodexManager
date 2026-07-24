@@ -40,7 +40,21 @@ const translations = {
     codexNotFound: "Codex App was not found in standard system locations. Please ensure Codex Desktop App is installed.",
     appearanceLabel: "Appearance",
     appearanceTheme: "Theme",
-    appearanceAccent: "Accent"
+    appearanceAccent: "Accent",
+    settingsLabel: "Settings",
+    settingsTitle: "Settings",
+    settingsAbout: "About",
+    settingsUpdates: "Updates",
+    settingsLatestVersion: "Latest version",
+    settingsCheck: "Check",
+    settingsCheckChecking: "Checking…",
+    settingsUpToDate: "Up to date",
+    settingsUpdateAvailable: "Update available",
+    settingsCheckFailed: "Check failed",
+    settingsDownload: "Download",
+    settingsGeneral: "General",
+    settingsLanguage: "Language",
+    settingsLinks: "Links"
   },
   zh: {
     appTitle: "Codex 多账号隔离管理器",
@@ -78,7 +92,21 @@ const translations = {
     codexNotFound: "未在系统标准路径检测到 Codex 桌面客户端，请确保已安装 Codex App。",
     appearanceLabel: "外观",
     appearanceTheme: "主题",
-    appearanceAccent: "强调色"
+    appearanceAccent: "强调色",
+    settingsLabel: "设置",
+    settingsTitle: "设置",
+    settingsAbout: "关于",
+    settingsUpdates: "更新",
+    settingsLatestVersion: "最新版本",
+    settingsCheck: "检查",
+    settingsCheckChecking: "检查中…",
+    settingsUpToDate: "已是最新版本",
+    settingsUpdateAvailable: "发现新版本",
+    settingsCheckFailed: "检查失败",
+    settingsDownload: "前往下载",
+    settingsGeneral: "通用",
+    settingsLanguage: "语言",
+    settingsLinks: "链接"
   },
   es: {
     appTitle: "Administrador de Cuentas Codex",
@@ -116,7 +144,21 @@ const translations = {
     codexNotFound: "No se encontró la aplicación Codex en las ubicaciones estándar del sistema.",
     appearanceLabel: "Apariencia",
     appearanceTheme: "Tema",
-    appearanceAccent: "Acento"
+    appearanceAccent: "Acento",
+    settingsLabel: "Ajustes",
+    settingsTitle: "Ajustes",
+    settingsAbout: "Acerca de",
+    settingsUpdates: "Actualizaciones",
+    settingsLatestVersion: "Última versión",
+    settingsCheck: "Comprobar",
+    settingsCheckChecking: "Comprobando…",
+    settingsUpToDate: "Actualizado",
+    settingsUpdateAvailable: "Actualización disponible",
+    settingsCheckFailed: "Error al comprobar",
+    settingsDownload: "Descargar",
+    settingsGeneral: "General",
+    settingsLanguage: "Idioma",
+    settingsLinks: "Enlaces"
   }
 };
 
@@ -166,8 +208,6 @@ const colorOptions = document.querySelectorAll('.color-option');
 
 // 外观（主题 / 强调色）DOM
 const themeSwatchEls = document.querySelectorAll('.theme-swatch');
-const accentPicker = document.getElementById('accentPicker');
-const accentHex = document.getElementById('accentHex');
 const appearanceBtn = document.getElementById('appearanceBtn');
 const appearancePopover = document.getElementById('appearancePopover');
 const DEFAULT_ACCENT = '#6e8ef2';
@@ -184,12 +224,26 @@ function applyAccent(color) {
   const c = (color || DEFAULT_ACCENT).toLowerCase();
   document.documentElement.style.setProperty('--accent', c);
   localStorage.setItem('codex_manager_accent', c);
-  if (accentPicker) accentPicker.value = c;
-  if (accentHex) accentHex.textContent = c;
+  document.querySelectorAll('.accent-picker').forEach(el => { el.value = c; });
+  document.querySelectorAll('.accent-hint').forEach(el => { el.textContent = c; });
 }
 // 尽早应用（模块在解析后、DOMContentLoaded 前执行），减少闪烁
 applyTheme(localStorage.getItem('codex_manager_theme') || 'slate');
 applyAccent(localStorage.getItem('codex_manager_accent') || DEFAULT_ACCENT);
+
+// 设置面板 DOM
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsOverlay = document.getElementById('settingsOverlay');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const settingsAppName = document.getElementById('settingsAppName');
+const settingsAppVersion = document.getElementById('settingsAppVersion');
+const settingsUpdateStatus = document.getElementById('settingsUpdateStatus');
+const checkUpdateBtn = document.getElementById('checkUpdateBtn');
+const downloadUpdateBtn = document.getElementById('downloadUpdateBtn');
+let appVersion = '';
+let appPlatform = '';          // "macos/aarch64" 等
+let latestReleaseUrl = '';
+let latestAssetUrl = '';
 
 // i18n 辅助函数
 function t(key, vars = {}) {
@@ -227,6 +281,7 @@ function updateUILanguage() {
 document.addEventListener('DOMContentLoaded', () => {
   initEventListeners();
   initAppearance();
+  initSettings();
   initKeyboardShortcuts();
   updateUILanguage();
   loadData();
@@ -244,10 +299,15 @@ function initKeyboardShortcuts() {
       e.preventDefault();
       searchInput.focus();
     }
-    // 按 'Esc' 关闭 Modal / 外观面板
+    // 按 'Esc' 依次关闭：外观面板 / 设置 / Profile 弹窗
     if (e.key === 'Escape') {
-      if (!modalOverlay.classList.contains('hidden')) closeModal();
-      else if (appearancePopover && !appearancePopover.classList.contains('hidden')) appearancePopover.classList.add('hidden');
+      if (appearancePopover && !appearancePopover.classList.contains('hidden')) {
+        appearancePopover.classList.add('hidden');
+      } else if (settingsOverlay && !settingsOverlay.classList.contains('hidden')) {
+        closeSettings();
+      } else if (!modalOverlay.classList.contains('hidden')) {
+        closeModal();
+      }
     }
   });
 }
@@ -261,11 +321,109 @@ function initAppearance() {
   themeSwatchEls.forEach(el => {
     el.addEventListener('click', () => applyTheme(el.dataset.theme));
   });
-  accentPicker.addEventListener('input', (e) => applyAccent(e.target.value));
+  document.querySelectorAll('.accent-picker').forEach(el => {
+    el.addEventListener('input', (e) => applyAccent(e.target.value));
+  });
   // 点击面板外部关闭
   document.addEventListener('click', (e) => {
     if (appearancePopover.classList.contains('hidden')) return;
     if (!e.target.closest('.popover-wrap')) appearancePopover.classList.add('hidden');
+  });
+}
+
+// ===== 设置面板 =====
+function openSettings() {
+  settingsOverlay.classList.remove('hidden');
+  loadAppInfo();
+}
+function closeSettings() {
+  settingsOverlay.classList.add('hidden');
+}
+
+async function loadAppInfo() {
+  if (invoke) {
+    try {
+      const info = await invoke('get_app_info');
+      appVersion = info.version;
+      appPlatform = `${info.platform}/${info.arch}`;
+      if (settingsAppName) settingsAppName.textContent = info.name;
+      if (settingsAppVersion) settingsAppVersion.textContent = `v${info.version} · ${appPlatform}`;
+      if (settingsUpdateStatus) settingsUpdateStatus.textContent = `v${info.version}`;
+    } catch (e) {
+      console.error('get_app_info failed:', e);
+    }
+  } else if (settingsAppVersion) {
+    settingsAppVersion.textContent = 'v0.0.1 · web preview';
+  }
+}
+
+// 语义化版本比较：返回 >0 表示 a 更新
+function compareVersions(a, b) {
+  const pa = String(a || '').replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
+  const pb = String(b || '').replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const da = pa[i] || 0, db = pb[i] || 0;
+    if (da !== db) return da - db;
+  }
+  return 0;
+}
+
+// 按当前平台挑选对应的安装包下载地址
+function pickAssetUrl(assets, platform) {
+  if (!assets || !assets.length) return null;
+  const first = pred => assets.filter(a => pred(a.name)).map(a => a.browser_download_url)[0];
+  if (platform === 'macos') return first(n => n.endsWith('.dmg')) || first(n => n.endsWith('.app.tar.gz'));
+  if (platform === 'windows') return first(n => n.endsWith('.exe')) || first(n => n.endsWith('.msi'));
+  if (platform === 'linux') return first(n => n.endsWith('.deb')) || first(n => n.endsWith('.AppImage')) || first(n => n.endsWith('.rpm'));
+  return null;
+}
+
+async function checkForUpdates() {
+  if (!settingsUpdateStatus) return;
+  settingsUpdateStatus.textContent = t('settingsCheckChecking');
+  downloadUpdateBtn.classList.add('hidden');
+  try {
+    const res = await fetch('https://api.github.com/repos/tianrking/CodexManager/releases/latest');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const latest = String(data.tag_name || '').replace(/^v/, '');
+    latestReleaseUrl = data.html_url || '';
+    latestAssetUrl = pickAssetUrl(data.assets, (appPlatform.split('/')[0] || ''));
+    if (appVersion && compareVersions(latest, appVersion) > 0) {
+      settingsUpdateStatus.textContent = `${t('settingsUpdateAvailable')} · v${latest}`;
+      downloadUpdateBtn.classList.remove('hidden');
+    } else {
+      settingsUpdateStatus.textContent = `${t('settingsUpToDate')} · v${appVersion || latest}`;
+    }
+  } catch (e) {
+    console.error('update check failed:', e);
+    settingsUpdateStatus.textContent = t('settingsCheckFailed');
+  }
+}
+
+async function openExternal(url) {
+  if (!url) return;
+  if (invoke) {
+    try {
+      const opener = await import('@tauri-apps/plugin-opener');
+      await opener.openUrl(url);
+    } catch (e) {
+      console.error('openUrl failed:', e);
+      window.open(url, '_blank');
+    }
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
+function initSettings() {
+  settingsBtn.addEventListener('click', openSettings);
+  closeSettingsBtn.addEventListener('click', closeSettings);
+  settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) closeSettings(); });
+  checkUpdateBtn.addEventListener('click', checkForUpdates);
+  downloadUpdateBtn.addEventListener('click', () => openExternal(latestAssetUrl || latestReleaseUrl));
+  document.querySelectorAll('.settings-link').forEach(el => {
+    el.addEventListener('click', () => openExternal(el.dataset.url));
   });
 }
 

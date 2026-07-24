@@ -668,6 +668,66 @@ body {
   color: var(--text-dim);
 }
 
+/* ===================== Settings Modal ===================== */
+.settings-card {
+  width: 480px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.settings-body {
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-right: -6px;
+}
+.settings-body::-webkit-scrollbar { width: 8px; }
+.settings-body::-webkit-scrollbar-thumb {
+  background: var(--surface-2);
+  border-radius: 100px;
+  border: 2px solid var(--bg-elevated);
+}
+.settings-section {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.settings-section:last-child { border-bottom: none; }
+.settings-section:first-child { padding-top: 2px; }
+.settings-section-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  margin-bottom: 10px;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.settings-label { min-width: 0; flex: 1; }
+.settings-name { font-size: 0.88rem; font-weight: 500; color: var(--text); }
+.settings-sub {
+  font-size: 0.76rem;
+  color: var(--text-mute);
+  margin-top: 2px;
+  font-family: var(--mono);
+}
+.settings-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.84rem;
+  padding: 7px 10px;
+  outline: none;
+  cursor: pointer;
+}
+.settings-select:focus { border-color: var(--border-focus); }
+.settings-select option { background: var(--bg-elevated); }
+.settings-links { display: flex; flex-wrap: wrap; gap: 8px; }
+
 /* ===================== Misc ===================== */
 .hidden { display: none !important; }
 

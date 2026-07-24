@@ -74,6 +74,28 @@ fn stop_all_profiles() {
     LauncherEngine::stop_all();
 }
 
+/// 应用元信息（供设置页展示版本 / 平台 / 仓库地址）
+#[derive(serde::Serialize)]
+struct AppInfo {
+    name: String,
+    version: String,
+    platform: String,
+    arch: String,
+    repo: String,
+}
+
+#[tauri::command]
+fn get_app_info(app: tauri::AppHandle) -> AppInfo {
+    let pkg = app.package_info();
+    AppInfo {
+        name: pkg.name.clone(),
+        version: pkg.version.to_string(),
+        platform: std::env::consts::OS.to_string(),
+        arch: std::env::consts::ARCH.to_string(),
+        repo: "https://github.com/tianrking/CodexManager".to_string(),
+    }
+}
+
 fn main() {
     let loaded = ProfileStore::load_profiles();
     let state = AppState {
@@ -83,6 +105,7 @@ fn main() {
     tauri::Builder::default()
         .manage(state)
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             tray::build_tray(app.handle())?;
             // 后台定期重建菜单，及时反映运行状态变化（含外部进程退出）
@@ -102,7 +125,8 @@ fn main() {
             launch_profile,
             open_profile_dir,
             stop_profile,
-            stop_all_profiles
+            stop_all_profiles,
+            get_app_info
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

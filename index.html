@@ -31,15 +31,10 @@
           <input type="text" id="searchInput" data-i18n-ph="searchPlaceholder" placeholder="Search Profile..." />
         </div>
 
-        <!-- Language Selector (i18n) -->
-        <div class="lang-selector">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18"/><path d="M12 3a14 14 0 0 0 0 18"/></svg>
-          <select id="langSelect">
-            <option value="en">English</option>
-            <option value="zh">简体中文</option>
-            <option value="es">Español</option>
-          </select>
-        </div>
+        <!-- Settings -->
+        <button id="settingsBtn" class="btn btn-secondary btn-icon" data-i18n-title="settingsLabel" title="Settings" aria-label="Settings">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
 
         <!-- Appearance: theme + accent -->
         <div class="popover-wrap">
@@ -60,7 +55,7 @@
             <div class="popover-section">
               <div class="popover-label" data-i18n="appearanceAccent">Accent</div>
               <div class="accent-row">
-                <input type="color" id="accentPicker" value="#6e8ef2" aria-label="Accent color" />
+                <input type="color" id="accentPicker" class="accent-picker" value="#6e8ef2" aria-label="Accent color" />
                 <span class="accent-hint" id="accentHex">#6e8ef2</span>
               </div>
             </div>
@@ -151,6 +146,82 @@
       </div>
     </div>
   </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsOverlay" class="modal-overlay hidden">
+      <div class="modal-card settings-card">
+        <div class="modal-header">
+          <h2 data-i18n="settingsTitle">Settings</h2>
+          <button id="closeSettingsBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="settings-body">
+          <!-- About -->
+          <section class="settings-section">
+            <div class="settings-section-title" data-i18n="settingsAbout">About</div>
+            <div class="settings-row">
+              <div class="settings-label">
+                <div class="settings-name" id="settingsAppName">CodexManager</div>
+                <div class="settings-sub" id="settingsAppVersion">v0.0.0 · …</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Updates -->
+          <section class="settings-section">
+            <div class="settings-section-title" data-i18n="settingsUpdates">Updates</div>
+            <div class="settings-row">
+              <div class="settings-label">
+                <div class="settings-name" data-i18n="settingsLatestVersion">Latest version</div>
+                <div class="settings-sub" id="settingsUpdateStatus">—</div>
+              </div>
+              <button id="checkUpdateBtn" class="btn btn-secondary" data-i18n="settingsCheck">Check</button>
+              <button id="downloadUpdateBtn" class="btn btn-primary hidden" data-i18n="settingsDownload">Download</button>
+            </div>
+          </section>
+
+          <!-- Appearance -->
+          <section class="settings-section">
+            <div class="settings-section-title" data-i18n="appearanceTheme">Theme</div>
+            <div class="theme-swatches" id="settingsThemeSwatches">
+              <button class="theme-swatch" data-theme="slate" title="Slate" style="--s1:#0d0d0f;--s2:#17171a"></button>
+              <button class="theme-swatch" data-theme="graphite" title="Graphite" style="--s1:#100f0d;--s2:#1d1a17"></button>
+              <button class="theme-swatch" data-theme="midnight" title="Midnight" style="--s1:#0a0e16;--s2:#141a2a"></button>
+              <button class="theme-swatch" data-theme="oled" title="OLED Black" style="--s1:#000000;--s2:#101010"></button>
+              <button class="theme-swatch" data-theme="daylight" title="Daylight" style="--s1:#f4f4f6;--s2:#ffffff"></button>
+            </div>
+            <div class="accent-row" style="margin-top:12px">
+              <input type="color" class="accent-picker" value="#6e8ef2" aria-label="Accent color" />
+              <span class="settings-sub accent-hint">#6e8ef2</span>
+            </div>
+          </section>
+
+          <!-- General -->
+          <section class="settings-section">
+            <div class="settings-section-title" data-i18n="settingsGeneral">General</div>
+            <div class="settings-row">
+              <div class="settings-label">
+                <div class="settings-name" data-i18n="settingsLanguage">Language</div>
+              </div>
+              <select id="langSelect" class="settings-select">
+                <option value="en">English</option>
+                <option value="zh">简体中文</option>
+                <option value="es">Español</option>
+              </select>
+            </div>
+          </section>
+
+          <!-- Links -->
+          <section class="settings-section">
+            <div class="settings-section-title" data-i18n="settingsLinks">Links</div>
+            <div class="settings-links">
+              <button class="btn btn-secondary settings-link" data-url="https://github.com/tianrking/CodexManager">GitHub</button>
+              <button class="btn btn-secondary settings-link" data-url="https://github.com/tianrking/CodexManager/issues">Issues</button>
+              <button class="btn btn-secondary settings-link" data-url="https://github.com/tianrking/CodexManager/releases">Releases</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
 
   <script type="module" src="./src/app.js"></script>
 </body>

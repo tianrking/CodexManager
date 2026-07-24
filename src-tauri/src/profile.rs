@@ -27,6 +27,15 @@ impl ProfileStore {
         Self::get_base_dir().join("config.json")
     }
 
+    /// 彻底删除指定 Profile 的物理隔离数据目录（含凭据 / userdata / cache / tmp）
+    /// 注意：刻意不走 get_profile_dir()，避免触发"创建目录 + 建符号链接"的副作用。
+    pub fn remove_profile_dir(profile_id: &str) {
+        let dir = Self::get_profiles_dir().join(profile_id);
+        if dir.exists() {
+            let _ = fs::remove_dir_all(&dir);
+        }
+    }
+
     pub fn get_profile_dir(profile_id: &str) -> PathBuf {
         let path = Self::get_profiles_dir().join(profile_id);
         let _ = fs::create_dir_all(path.join("Library/Application Support"));

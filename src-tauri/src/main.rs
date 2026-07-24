@@ -40,6 +40,8 @@ fn update_profile(state: tauri::State<AppState>, profile: Profile) -> Vec<Profil
 #[tauri::command]
 fn delete_profile(state: tauri::State<AppState>, profile_id: String) -> Vec<Profile> {
     LauncherEngine::stop(&profile_id);
+    // 彻底清除磁盘上的隔离凭据目录，避免登录 token 残留与孤儿目录堆积
+    ProfileStore::remove_profile_dir(&profile_id);
     let mut profiles = state.profiles.lock().unwrap();
     profiles.retain(|p| p.id != profile_id);
     ProfileStore::save_profiles(&profiles);

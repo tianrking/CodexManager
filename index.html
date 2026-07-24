@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Codex 多账号隔离管理器 (Cross-Platform)</title>
+  <title>Codex Multi-Account Isolation Manager</title>
   <link rel="stylesheet" href="./src/style.css" />
 </head>
 <body>
   <div id="app">
-    <!-- 顶部 Bar -->
+    <!-- Top Bar -->
     <header class="top-bar">
       <div class="brand">
         <div class="brand-icon">
@@ -17,84 +17,94 @@
           </svg>
         </div>
         <div class="brand-text">
-          <h1>Codex 多账号隔离管理器</h1>
-          <p class="subtitle">跨平台支持 (macOS / Win / Linux) · 0 踢下线 · Agent 能力无损</p>
+          <h1 data-i18n="appTitle">Codex Multi-Account Manager</h1>
+          <p class="subtitle" data-i18n="appSubtitle">Cross-Platform (macOS / Win / Linux) · Zero Session Overwrite · Native Agent Unrestricted</p>
         </div>
       </div>
 
       <div class="actions-header">
-        <!-- 搜索框 -->
+        <!-- Search Box -->
         <div class="search-box">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
           </svg>
-          <input type="text" id="searchInput" placeholder="搜索 Profile 账号..." />
+          <input type="text" id="searchInput" data-i18n-ph="searchPlaceholder" placeholder="Search Profile..." />
         </div>
 
-        <!-- 状态指示 -->
+        <!-- Language Selector (i18n) -->
+        <div class="lang-selector">
+          🌐
+          <select id="langSelect">
+            <option value="en">English</option>
+            <option value="zh">简体中文</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+
+        <!-- Status Badge -->
         <div class="status-badge">
           <span class="dot" id="statusDot"></span>
-          <span id="runningCountText">0 个在线中</span>
+          <span id="runningCountText">0 Online</span>
         </div>
 
         <button id="stopAllBtn" class="btn btn-danger-outline hidden">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="6" y="6" width="12" height="12" rx="2"/>
           </svg>
-          全部停止
+          <span data-i18n="stopAll">Stop All</span>
         </button>
 
         <button id="addProfileBtn" class="btn btn-primary">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          新增账号
+          <span data-i18n="addProfile">Add Profile</span>
         </button>
       </div>
     </header>
 
-    <!-- 主体区域 -->
+    <!-- Main Content -->
     <main class="content-area">
       <div id="profileGrid" class="profile-grid">
-        <!-- 动态渲染 Profile 卡片 -->
+        <!-- Profile Cards Rendered Dynamically -->
       </div>
       <div id="emptyState" class="empty-state hidden">
         <div class="empty-icon">👤</div>
-        <h3>尚无 Codex 隔离 Profile</h3>
-        <p>点击上方「新增账号」创建物理隔离的 Auth 与凭据环境</p>
+        <h3 id="emptyTitle" data-i18n="noProfilesTitle">No Codex Isolated Profiles</h3>
+        <p id="emptyDesc" data-i18n="noProfilesDesc">Click 'Add Profile' above to create a physically isolated Auth environment.</p>
       </div>
     </main>
 
-    <!-- Modal 弹窗 -->
+    <!-- Modal Dialog -->
     <div id="modalOverlay" class="modal-overlay hidden">
       <div class="modal-card">
         <div class="modal-header">
-          <h2 id="modalTitle">新增 Codex 隔离账号 Profile</h2>
+          <h2 id="modalTitle" data-i18n="modalAddTitle">Add Codex Isolated Profile</h2>
           <button id="closeModalBtn" class="close-btn">&times;</button>
         </div>
         <form id="profileForm">
           <input type="hidden" id="editProfileId" />
           
           <div class="form-group">
-            <label for="profileName">账号名称 <span class="required">*</span></label>
-            <input type="text" id="profileName" placeholder="例如: Work / Personal / Client-A" required />
+            <label for="profileName"><span data-i18n="labelProfileName">Profile Name</span> <span class="required">*</span></label>
+            <input type="text" id="profileName" data-i18n-ph="namePlaceholder" placeholder="e.g., Work / Personal / Client-A" required />
           </div>
 
           <div class="form-group">
-            <label for="profileNote">备注说明 (可选)</label>
-            <input type="text" id="profileNote" placeholder="如：公司主账号，配额充足" />
+            <label for="profileNote" data-i18n="labelNote">Description (Optional)</label>
+            <input type="text" id="profileNote" data-i18n-ph="notePlaceholder" placeholder="e.g., Main work account, sufficient quota" />
           </div>
 
           <div class="form-group">
-            <label for="projectPath">默认关联项目路径 (可选)</label>
+            <label for="projectPath" data-i18n="labelProjectPath">Default Project Path (Optional)</label>
             <div class="input-with-btn">
-              <input type="text" id="projectPath" placeholder="例如 /Users/username/Developer/project" />
-              <button type="button" id="browsePathBtn" class="btn btn-secondary">浏览...</button>
+              <input type="text" id="projectPath" data-i18n-ph="pathPlaceholder" placeholder="e.g., /Users/username/Developer/project" />
+              <button type="button" id="browsePathBtn" class="btn btn-secondary" data-i18n="btnBrowse">Browse...</button>
             </div>
           </div>
 
           <div class="form-group">
-            <label>卡片标识颜色</label>
+            <label data-i18n="labelBadgeColor">Badge Color</label>
             <div class="color-picker" id="colorPicker">
               <div class="color-option active" data-color="#007AFF" style="background-color: #007AFF;"></div>
               <div class="color-option" data-color="#34C759" style="background-color: #34C759;"></div>
@@ -106,8 +116,8 @@
           </div>
 
           <div class="modal-actions">
-            <button type="button" id="cancelModalBtn" class="btn btn-secondary">取消</button>
-            <button type="submit" class="btn btn-primary">保存 Profile</button>
+            <button type="button" id="cancelModalBtn" class="btn btn-secondary" data-i18n="btnCancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" data-i18n="btnSave">Save Profile</button>
           </div>
         </form>
       </div>

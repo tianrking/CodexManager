@@ -3,7 +3,6 @@
   "productName": "CodexManager",
   "version": "1.0.0",
   "identifier": "com.tianrking.codexmanager",
-  "publisher": "tianrking",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -13,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Codex 多账号隔离管理器",
+        "title": "Codex Multi-Account Manager",
         "width": 880,
         "height": 580,
         "resizable": true,

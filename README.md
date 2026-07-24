@@ -31,7 +31,7 @@ Created & Maintained by **[@tianrking](https://github.com/tianrking)**
 Official **Codex Desktop Apps** (and Electron-based AI coding agents) store authentication tokens, session states, and Device IDs in fixed global system locations (such as `~/.codex` or System Keyrings/Keychain).
 
 This architecture causes significant friction for developers:
-1. **Account Conflict**: Logging into Account B instantly overwrites the local session for Account A, forcing account A offline.
+1. **Account Conflict**: Logging into Account B instantly overwrites the local session for Account A, forcing Account A offline.
 2. **Handicapped Sandboxes**: Traditional virtualization or container sandboxes (like VMs) isolate accounts but **cripple the AI Agent's core capabilities**—preventing it from editing host files, running shell commands, or interacting with host Docker daemons.
 
 **Codex Manager** by **[@tianrking](https://github.com/tianrking)** addresses these challenges by combining **Tauri 2 + Rust** with physical environment redirection. It enables **concurrent multi-account execution** while preserving **100% of the AI Agent's native operating system capabilities**.
@@ -58,8 +58,9 @@ This architecture causes significant friction for developers:
 
 ---
 
-## ✨ Features Breakdown
+## ✨ Key Features
 
+- 🌐 **Native Trilingual GUI (i18n)**: Seamlessly switch between **English**, **简体中文**, and **Español** directly in the top navigation bar.
 - 🔄 **Concurrent Multi-Instance Execution**: Open multiple official Codex Desktop App windows simultaneously with independent Auth sessions.
 - 🛡️ **Complete Physical Isolation**: Isolates `HOME`, `CODEX_HOME`, `--user-data-dir`, `TMPDIR`, Chromium caches, and crash dumps per profile.
 - 🔑 **Automatic Git & SSH Inheritance**: Preserves host `~/.gitconfig` and `~/.ssh` credentials, ensuring seamless CLI, Git, and remote operations for AI Agents.

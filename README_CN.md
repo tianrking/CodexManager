@@ -7,6 +7,7 @@
 项目作者与维护者：**[@tianrking](https://github.com/tianrking)**
 
 [![Author](https://img.shields.io/badge/作者-tianrking-black?style=for-the-badge&logo=github)](https://github.com/tianrking)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/tianrking/CodexManager/ci.yml?branch=main&style=for-the-badge&logo=github-actions&logoColor=white&label=CI)](https://github.com/tianrking/CodexManager/actions)
 [![Tauri 2.0](https://img.shields.io/badge/Tauri-2.0-blue?style=for-the-badge&logo=tauri&logoColor=white)](https://tauri.app/)
 [![Rust Engine](https://img.shields.io/badge/Rust-后端引擎-orange?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org/)
 [![Vite](https://img.shields.io/badge/Vite-前端框架-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
@@ -59,6 +60,7 @@
 
 ## ✨ 核心功能矩阵
 
+- 🌐 **原生软件界面三语无缝切换**：顶栏原生支持 **英文 (English)**、**简体中文** 与 **西班牙语 (Español)** 动态实时切换。
 - 🔄 **多账号并发多开**：同时运行工作账号与个人账号，各自保持在线，不互相影响。
 - 🛡️ **彻底的环境物理隔离**：为每个 Profile 独立隔离 `HOME`、`CODEX_HOME`、`--user-data-dir`、`TMPDIR` 以及 Chromium 缓存。
 - 🔑 **自动继承 Git & SSH 配置**：自动为 Profile 软链接宿主机的 `~/.gitconfig` 与 `~/.ssh`，确保 Agent 命令行提交与远程仓库访问无缝顺畅。

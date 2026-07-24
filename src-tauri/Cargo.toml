@@ -1,6 +1,6 @@
 [package]
 name = "codex_manager"
-version = "1.0.0"
+version = "0.0.1"
 description = "Cross-platform Codex Multi-Account Manager"
 authors = ["tianrking <https://github.com/tianrking>"]
 edition = "2021"

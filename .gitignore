@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Vite build output
+dist/
+
+# Rust build output
+src-tauri/target/
+
+# System / IDE files
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.idea/
+.vscode/
+
+# Local data & logs
+.codex_manager/
+*.log

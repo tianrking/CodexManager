@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Codex 多账号隔离管理器 (Cross-Platform)</title>
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部 Bar -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Codex 多账号隔离管理器</h1>
+          <p class="subtitle">跨平台支持 (macOS / Win / Linux) · 0 踢下线 · Agent 能力无损</p>
+        </div>
+      </div>
+
+      <div class="actions-header">
+        <!-- 搜索框 -->
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input type="text" id="searchInput" placeholder="搜索 Profile 账号..." />
+        </div>
+
+        <!-- 状态指示 -->
+        <div class="status-badge">
+          <span class="dot" id="statusDot"></span>
+          <span id="runningCountText">0 个在线中</span>
+        </div>
+
+        <button id="stopAllBtn" class="btn btn-danger-outline hidden">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="6" y="6" width="12" height="12" rx="2"/>
+          </svg>
+          全部停止
+        </button>
+
+        <button id="addProfileBtn" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          新增账号
+        </button>
+      </div>
+    </header>
+
+    <!-- 主体区域 -->
+    <main class="content-area">
+      <div id="profileGrid" class="profile-grid">
+        <!-- 动态渲染 Profile 卡片 -->
+      </div>
+      <div id="emptyState" class="empty-state hidden">
+        <div class="empty-icon">👤</div>
+        <h3>尚无 Codex 隔离 Profile</h3>
+        <p>点击上方「新增账号」创建物理隔离的 Auth 与凭据环境</p>
+      </div>
+    </main>
+
+    <!-- Modal 弹窗 -->
+    <div id="modalOverlay" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="modalTitle">新增 Codex 隔离账号 Profile</h2>
+          <button id="closeModalBtn" class="close-btn">&times;</button>
+        </div>
+        <form id="profileForm">
+          <input type="hidden" id="editProfileId" />
+          
+          <div class="form-group">
+            <label for="profileName">账号名称 <span class="required">*</span></label>
+            <input type="text" id="profileName" placeholder="例如: Work / Personal / Client-A" required />
+          </div>
+
+          <div class="form-group">
+            <label for="profileNote">备注说明 (可选)</label>
+            <input type="text" id="profileNote" placeholder="如：公司主账号，配额充足" />
+          </div>
+
+          <div class="form-group">
+            <label for="projectPath">默认关联项目路径 (可选)</label>
+            <div class="input-with-btn">
+              <input type="text" id="projectPath" placeholder="例如 /Users/username/Developer/project" />
+              <button type="button" id="browsePathBtn" class="btn btn-secondary">浏览...</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>卡片标识颜色</label>
+            <div class="color-picker" id="colorPicker">
+              <div class="color-option active" data-color="#007AFF" style="background-color: #007AFF;"></div>
+              <div class="color-option" data-color="#34C759" style="background-color: #34C759;"></div>
+              <div class="color-option" data-color="#FF9500" style="background-color: #FF9500;"></div>
+              <div class="color-option" data-color="#AF52DE" style="background-color: #AF52DE;"></div>
+              <div class="color-option" data-color="#FF2D55" style="background-color: #FF2D55;"></div>
+              <div class="color-option" data-color="#5AC8FA" style="background-color: #5AC8FA;"></div>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="cancelModalBtn" class="btn btn-secondary">取消</button>
+            <button type="submit" class="btn btn-primary">保存 Profile</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

@@ -27,6 +27,7 @@ impl LauncherEngine {
         let profile_dir = ProfileStore::get_profile_dir(profile_id);
         let userdata_dir = profile_dir.join("userdata");
         let tmp_dir = profile_dir.join("tmp");
+        #[cfg(any(target_os = "macos", target_os = "windows"))]
         let cache_dir = profile_dir.join("cache");
 
         #[cfg(target_os = "macos")]
@@ -545,7 +546,7 @@ fn var_fetch_running_profiles() -> HashMap<String, u32> {
     {
         let mut result = HashMap::new();
         let output = Command::new("/bin/ps")
-            .args(&["-ax", "-o", "pid,command"])
+            .args(["-ax", "-o", "pid,command"])
             .output();
 
         if let Ok(out) = output {
@@ -554,7 +555,7 @@ fn var_fetch_running_profiles() -> HashMap<String, u32> {
                 if (line.contains("Codex") || line.contains("codex"))
                     && line.contains(".codex_manager/profiles/")
                 {
-                    let parts: Vec<&str> = line.trim().split_whitespace().collect();
+                    let parts: Vec<&str> = line.split_whitespace().collect();
                     if let Some(pid_str) = parts.first() {
                         if let Ok(pid) = pid_str.parse::<u32>() {
                             if let Some(pos) = line.find(".codex_manager/profiles/") {
@@ -707,7 +708,7 @@ fn terminate_windows_process_trees(
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, target_os = "windows"))]
 mod tests {
     use super::*;
 

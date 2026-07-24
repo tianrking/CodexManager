@@ -36,20 +36,34 @@ impl ProfileStore {
 
         // 细节优化：自动继承/软链接宿主机的 ~/.gitconfig 与 ~/.ssh，保全 Agent 原生 Git/SSH 能力
         if let Some(home) = dirs::home_dir() {
-            let host_gitconfig = home.join(".gitconfig");
-            let profile_gitconfig = path.join(".gitconfig");
-            if host_gitconfig.exists() && !profile_gitconfig.exists() {
-                #[cfg(not(target_os = "windows"))]
-                let _ = std::os::unix::fs::symlink(&host_gitconfig, &profile_gitconfig);
-                #[cfg(target_os = "windows")]
-                let _ = fs::copy(&host_gitconfig, &profile_gitconfig);
+            let gitconfig = home.join(".gitconfig");
+            if gitconfig.exists() {
+                let target = path.join(".gitconfig");
+                if !target.exists() {
+                    #[cfg(unix)]
+                    let _ = std::os::unix::fs::symlink(&gitconfig, &target);
+                    #[cfg(windows)]
+                    {
+                        if std::os::windows::fs::symlink_file(&gitconfig, &target).is_err() {
+                            let _ = std::fs::copy(&gitconfig, &target);
+                        }
+                    }
+                }
             }
 
-            let host_ssh = home.join(".ssh");
-            let profile_ssh = path.join(".ssh");
-            if host_ssh.exists() && !profile_ssh.exists() {
-                #[cfg(not(target_os = "windows"))]
-                let _ = std::os::unix::fs::symlink(&host_ssh, &profile_ssh);
+            let ssh = home.join(".ssh");
+            if ssh.exists() {
+                let target = path.join(".ssh");
+                if !target.exists() {
+                    #[cfg(unix)]
+                    let _ = std::os::unix::fs::symlink(&ssh, &target);
+                    #[cfg(windows)]
+                    {
+                        if std::os::windows::fs::symlink_dir(&ssh, &target).is_err() {
+                            let _ = copy_dir_all(&ssh, &target);
+                        }
+                    }
+                }
             }
         }
 
@@ -95,6 +109,21 @@ impl ProfileStore {
             let _ = fs::write(file, json);
         }
     }
+}
+
+#[cfg(windows)]
+fn copy_dir_all(src: &PathBuf, dst: &PathBuf) -> std::io::Result<()> {
+    std::fs::create_dir_all(dst)?;
+    for entry in std::fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        if ty.is_dir() {
+            copy_dir_all(&entry.path(), &dst.join(entry.file_name()))?;
+        } else {
+            std::fs::copy(entry.path(), dst.join(entry.file_name()))?;
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]

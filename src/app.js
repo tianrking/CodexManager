@@ -306,6 +306,47 @@ function initEventListeners() {
       }
     }
   });
+
+  // 卡片事件委托：一个监听器处理所有卡片的点击 / 拖拽，替代内联 onclick 与 ondrop
+  profileGrid.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const card = btn.closest('[data-card]');
+    const id = card && card.getAttribute('data-profile-id');
+    if (!id) return;
+    switch (btn.getAttribute('data-action')) {
+      case 'launch':  launchProfile(id); break;
+      case 'stop':    stopProfile(id); break;
+      case 'openDir': openProfileDir(id); break;
+      case 'edit':    editProfile(id); break;
+      case 'delete':  deleteProfile(id); break;
+    }
+  });
+
+  const dropTarget = (e) => e.target.closest('[data-card]');
+  profileGrid.addEventListener('dragover', (e) => {
+    const card = dropTarget(e);
+    if (!card) return;
+    e.preventDefault();
+    card.classList.add('drag-over');
+  });
+  profileGrid.addEventListener('dragleave', (e) => {
+    const card = dropTarget(e);
+    if (!card) return;
+    card.classList.remove('drag-over');
+  });
+  profileGrid.addEventListener('drop', (e) => {
+    const card = dropTarget(e);
+    if (!card) return;
+    e.preventDefault();
+    card.classList.remove('drag-over');
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const folderPath = e.dataTransfer.files[0].path;
+      if (folderPath) {
+        launchProfile(card.getAttribute('data-profile-id'), folderPath);
+      }
+    }
+  });
 }
 
 async function loadData() {
@@ -363,14 +404,11 @@ function renderProfiles() {
     const pid = localRunningPids[profile.id];
 
     return `
-      <div class="card" id="card-${profile.id}" 
-           ondragover="handleDragOver(event)" 
-           ondragleave="handleDragLeave(event)" 
-           ondrop="handleDrop(event, '${profile.id}')">
+      <div class="card" data-card data-profile-id="${escapeHtml(profile.id)}">
         <div class="card-header">
           <div class="card-title-group">
             <div class="profile-avatar" style="background-color: ${profile.color}20; color: ${profile.color}">
-              ${profile.name.charAt(0).toUpperCase()}
+              ${escapeHtml(profile.name.charAt(0).toUpperCase())}
             </div>
             <div class="profile-info">
               <h3>${escapeHtml(profile.name)}</h3>
@@ -393,23 +431,23 @@ function renderProfiles() {
 
         <div class="card-actions">
           ${isRunning ? `
-            <button class="btn btn-secondary btn-launch" onclick="stopProfile('${profile.id}')" style="color: var(--accent-red); background: rgba(248, 113, 113, 0.15)">
+            <button class="btn btn-secondary btn-launch" data-action="stop" style="color: var(--accent-red); background: rgba(248, 113, 113, 0.15)">
               ${t('btnStop')}
             </button>
           ` : `
-            <button class="btn btn-primary btn-launch" onclick="launchProfile('${profile.id}')" style="background: ${profile.color}">
+            <button class="btn btn-primary btn-launch" data-action="launch" style="background: ${profile.color}">
               ${t('btnLaunch')}
             </button>
           `}
 
-          <button class="btn btn-secondary" onclick="openProfileDir('${profile.id}')" title="${t('tipOpenFolder')}">
+          <button class="btn btn-secondary" data-action="openDir" title="${escapeHtml(t('tipOpenFolder'))}">
             📂
           </button>
-          
-          <button class="btn btn-secondary" onclick="editProfile('${profile.id}')" title="${t('tipEdit')}">
+
+          <button class="btn btn-secondary" data-action="edit" title="${escapeHtml(t('tipEdit'))}">
             ✏️
           </button>
-          <button class="btn btn-secondary" onclick="deleteProfile('${profile.id}')" title="${t('tipDelete')}" style="color: var(--accent-red)">
+          <button class="btn btn-secondary" data-action="delete" title="${escapeHtml(t('tipDelete'))}" style="color: var(--accent-red)">
             🗑️
           </button>
         </div>
@@ -418,34 +456,14 @@ function renderProfiles() {
   }).join('');
 }
 
-// Drag & Drop
-window.handleDragOver = (e) => {
-  e.preventDefault();
-  e.currentTarget.classList.add('drag-over');
-};
-
-window.handleDragLeave = (e) => {
-  e.currentTarget.classList.remove('drag-over');
-};
-
-window.handleDrop = (e, profileId) => {
-  e.preventDefault();
-  e.currentTarget.classList.remove('drag-over');
-  if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-    const folderPath = e.dataTransfer.files[0].path;
-    if (folderPath) {
-      launchProfile(profileId, folderPath);
-    }
-  }
-};
-
-window.openProfileDir = async (id) => {
+// 卡片操作：不再使用内联 onclick / ondrop，改为事件委托，规避 innerHTML + 内联事件的 XSS 面
+async function openProfileDir(id) {
   if (invoke) {
     await invoke('open_profile_dir', { profileId: id });
   }
-};
+}
 
-window.launchProfile = async (id, customPath = null) => {
+async function launchProfile(id, customPath = null) {
   if (invoke) {
     const ok = await invoke('launch_profile', { profileId: id, projectPath: customPath || null });
     if (!ok) {
@@ -455,25 +473,25 @@ window.launchProfile = async (id, customPath = null) => {
     localRunningPids[id] = 12345;
   }
   fetchRunningStatus();
-};
+}
 
-window.stopProfile = async (id) => {
+async function stopProfile(id) {
   if (invoke) {
     await invoke('stop_profile', { profileId: id });
   } else {
     delete localRunningPids[id];
   }
   fetchRunningStatus();
-};
+}
 
-window.editProfile = (id) => {
+function editProfile(id) {
   const profile = localProfiles.find(p => p.id === id);
   if (profile) {
     openModal(profile);
   }
-};
+}
 
-window.deleteProfile = async (id) => {
+async function deleteProfile(id) {
   const profile = localProfiles.find(p => p.id === id);
   const confirmMsg = t('confirmDelete', { name: profile ? profile.name : id });
   if (confirm(confirmMsg)) {
@@ -485,7 +503,7 @@ window.deleteProfile = async (id) => {
     }
     loadData();
   }
-};
+}
 
 function openModal(profile = null) {
   if (profile) {

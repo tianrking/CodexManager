@@ -2,7 +2,7 @@
 
 # 🚀 Codex Manager
 
-**Cross-Platform Multi-Account & Profile Isolation Manager for Codex App**
+**Cross-Platform Multi-Account Isolation Manager for Codex App**
 
 Created & Maintained by **[@tianrking](https://github.com/tianrking)**
 
@@ -15,7 +15,7 @@ Created & Maintained by **[@tianrking](https://github.com/tianrking)**
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 <p align="center">
-  <b>Concurrent Multi-Account Support</b> • <b>Zero Session Overwrite</b> • <b>Unrestricted Native Agent Capabilities</b>
+  Concurrent Multi-Account Support • Independent Session Storage • Native System Access
 </p>
 
 ---
@@ -26,62 +26,47 @@ Created & Maintained by **[@tianrking](https://github.com/tianrking)**
 
 ---
 
-## 📖 Overview & Problem Statement
+## 📖 Introduction
 
-Official **Codex Desktop Apps** (and Electron-based AI coding agents) store authentication tokens, session states, and Device IDs in fixed global system locations (such as `~/.codex` or System Keyrings/Keychain).
+Official Codex Desktop Apps store authentication tokens, configuration, and Device IDs in a shared global directory (`~/.codex` or system Keyrings). Logging into a different account overwrites the local session and forces existing instances offline.
 
-This architecture causes significant friction for developers:
-1. **Account Conflict**: Logging into Account B instantly overwrites the local session for Account A, forcing Account A offline.
-2. **Handicapped Sandboxes**: Traditional virtualization or container sandboxes (like VMs) isolate accounts but **cripple the AI Agent's core capabilities**—preventing it from editing host files, running shell commands, or interacting with host Docker daemons.
+**Codex Manager** is a desktop utility built with **Tauri 2** and **Rust**. It allows running multiple Codex Desktop App instances concurrently by redirecting environment variables (`HOME`, `CODEX_HOME`, `TMPDIR`, and `--user-data-dir`) per profile.
 
-**Codex Manager** by **[@tianrking](https://github.com/tianrking)** addresses these challenges by combining **Tauri 2 + Rust** with physical environment redirection. It enables **concurrent multi-account execution** while preserving **100% of the AI Agent's native operating system capabilities**.
+The tool isolates authentication sessions while allowing instances to retain access to host project files, terminal environment, Git/SSH configurations, and Docker socket.
 
 ---
 
-## 🎯 Target Use Cases & Scenarios
+## 🎯 Use Cases
 
-### Scenario 1: Work vs. Personal Account Coexistence
-- **Problem**: Developers need to run enterprise Codex accounts for company projects and personal accounts for side projects simultaneously.
-- **Solution**: Create a `Work` profile and a `Personal` profile in Codex Manager. Both instances run side-by-side without kicking each other offline.
-
-### Scenario 2: Multi-Client Project Isolation
-- **Problem**: Freelancers and agencies managing multiple client repositories need strict credential separation to avoid cross-project token leakage.
-- **Solution**: Bind specific project directories to dedicated client profiles. Launching a profile automatically opens Codex scoped to that client's repository with isolated tokens.
-
-### Scenario 3: Instant Account Rotation Upon Quota Limits
-- **Problem**: Encountering rate limits or quota depletion on one account halts active development.
-- **Solution**: Keep secondary fallback accounts configured as profiles. Switch or launch an alternate profile in 0 milliseconds without re-authenticating.
-
-### Scenario 4: Enterprise Unrestricted Agent Workflow
-- **Problem**: Agent sandboxes that prevent access to host terminal or Git configs break automated workflows.
-- **Solution**: Codex Manager automatically links host `~/.gitconfig` and `~/.ssh` into profile environments, allowing Agents to commit code, push to remote repos, and manage host Docker containers natively.
+- **Work & Personal Accounts**: Run enterprise and personal accounts simultaneously without logging out.
+- **Client Project Isolation**: Keep client repositories and authentication tokens separated into distinct profiles.
+- **Rate Limit & Quota Rotation**: Switch to an alternative account profile when reaching quota or rate limits.
+- **Unrestricted Local Environment**: Keep host `~/.gitconfig` and `~/.ssh` access so AI Agents can commit code and access remotes normally.
 
 ---
 
-## ✨ Key Features
+## ✨ Features
 
-- 🌐 **Native Trilingual GUI (i18n)**: Seamlessly switch between **English**, **简体中文**, and **Español** directly in the top navigation bar.
-- 🔄 **Concurrent Multi-Instance Execution**: Open multiple official Codex Desktop App windows simultaneously with independent Auth sessions.
-- 🛡️ **Complete Physical Isolation**: Isolates `HOME`, `CODEX_HOME`, `--user-data-dir`, `TMPDIR`, Chromium caches, and crash dumps per profile.
-- 🔑 **Automatic Git & SSH Inheritance**: Preserves host `~/.gitconfig` and `~/.ssh` credentials, ensuring seamless CLI, Git, and remote operations for AI Agents.
-- ⚡ **Precision Process Tree Cleanup**: Employs path-matched `pkill -9 -f` regex termination to cleanly kill master processes and all Electron Helper/Renderer sub-processes.
-- 📁 **Drag & Drop Folder Launch**: Drag any local project folder directly onto a profile card to launch Codex scoped to that directory.
-- 🔍 **One-Click Data Folder Access**: Instantly open the profile's physical storage directory in Finder (macOS), Explorer (Windows), or xdg-open (Linux).
-- 🎨 **Modern Glassmorphic UI**: Responsive Dark/Light UI with real-time PID status badges and customizable profile icons.
+- 🌐 **GUI Language Switcher**: Built-in support for English, 简体中文, and Español.
+- 🔄 **Multi-Instance Support**: Open multiple Codex windows with independent session directories.
+- 🛡️ **Environment Isolation**: Separate `HOME`, `CODEX_HOME`, `--user-data-dir`, `TMPDIR`, and cache folders per profile.
+- 🔑 **Git & SSH Linking**: Automatically links host `~/.gitconfig` and `~/.ssh` into profile directories.
+- ⚡ **Process Termination**: Stops master processes and helper sub-processes via path-matched `pkill -9 -f`.
+- 📁 **Folder Drag & Drop**: Drag a project folder onto a profile card to launch Codex scoped to that directory.
+- 🔍 **Data Directory Access**: Open a profile's physical data folder in Finder, File Explorer, or xdg-open.
 
 ---
 
-## 📐 Architecture & Isolation Mechanics
+## 📐 Isolation Mechanics
 
 ```
                         +---------------------------------------+
                         |     Codex Manager GUI (Tauri App)     |
-                        |          Author: @tianrking           |
                         +-------------------+-------------------+
                                             |
                                             v
                         +---------------------------------------+
-                        |        Rust Isolation Engine          |
+                        |        Rust Process Engine            |
                         +-------------------+-------------------+
                                             |
          +----------------------------------+----------------------------------+
@@ -90,7 +75,6 @@ This architecture causes significant friction for developers:
  - HOME: ~/.codex_manager/p1       - HOME: ~/.codex_manager/p2       - HOME: ~/.codex_manager/p3
  - UserData: .../p1/userdata       - UserData: .../p2/userdata       - UserData: .../p3/userdata
  - Temp Socket: .../p1/tmp         - Temp Socket: .../p2/tmp         - Temp Socket: .../p3/tmp
- - Auth Token: Session 1           - Auth Token: Session 2           - Auth Token: Session 3
          |                                  |                                  |
          +----------------------------------+----------------------------------+
                                             |
@@ -98,60 +82,45 @@ This architecture causes significant friction for developers:
                         [ Host System Resources & Git/Docker ]
 ```
 
-### Deep Technical Isolation Matrix
+### Technical Redirections
 
-| Dimension | Technical Redirection | Solved Pain Point |
+| Dimension | Redirection Parameter | Purpose |
 | :--- | :--- | :--- |
-| **Auth & Session** | `--user-data-dir=<profile>/userdata` | Prevents credential overwrites and single-instance locks. |
+| **Auth & Session** | `--user-data-dir=<profile>/userdata` | Isolates session storage and bypasses single-instance lock. |
 | **Global Config** | `HOME=<profile>` & `CODEX_HOME=<profile>/.codex` | Isolates global CLI settings and Device ID generation. |
 | **Shared IPC Socket**| `TMPDIR=<profile>/tmp` (macOS/Linux) / `TMP` (Win) | Prevents Electron instances from sharing IPC sockets. |
-| **Keyring Collision** | `NODE_KEYRING_DISABLE=1` & `--password-store=basic` | Forces file-based token storage, bypassing Keyring collisions. |
-| **Git/SSH Preservation**| Symlink `~/.gitconfig` & `~/.ssh` | Ensures Agent can commit code and access remotes seamlessly. |
+| **Keyring Collision** | `NODE_KEYRING_DISABLE=1` & `--password-store=basic` | Uses file-based token storage to prevent keyring collisions. |
+| **Git/SSH Preservation**| Symlink `~/.gitconfig` & `~/.ssh` | Maintains host Git and SSH credentials for local commits. |
 
 ---
 
-## 🔒 Privacy & Security Guarantee
-
-- **Local-First Architecture**: All profile configurations, session directories, and tokens remain **100% on your local machine** (`~/.codex_manager/`).
-- **Zero Telemetry / Analytics**: Codex Manager does not collect, transmit, or store any personal credentials or telemetry.
-- **Open Source Security**: Built with Rust and Tauri 2.0 with minimal external dependencies, ensuring full transparency and auditability.
-
----
-
-## 🛠️ Prerequisites & Installation
+## 🛠️ Build & Installation
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18+)
 - [Rust & Cargo](https://www.rust-lang.org/) (1.75+)
 
-### Quick Start (Development Mode)
+### Development Mode
 
 ```bash
-# Clone repository
 git clone https://github.com/tianrking/CodexManager.git
 cd CodexManager
 
-# Install dependencies
 npm install
-
-# Run desktop app in dev mode
 npx tauri dev
 ```
 
-### Production Build
-
-To compile a standalone binary (`.app`, `.dmg`, `.exe`, `.msi`, `.deb`, `.AppImage`):
+### Building Release
 
 ```bash
-# Build frontend and compile Rust release binary
 npm run build
 npx tauri build
 ```
 
-The output bundle will be generated in `src-tauri/target/release/bundle/`.
+Standalone packages (`.app`, `.dmg`, `.exe`, `.msi`, `.deb`, `.AppImage`) will be generated under `src-tauri/target/release/bundle/`.
 
 ---
 
 ## 📄 License
 
-Distributed under the MIT License. Created & Maintained by **[@tianrking](https://github.com/tianrking)**. See [`LICENSE`](LICENSE) for details.
+Distributed under the MIT License. Maintained by **[@tianrking](https://github.com/tianrking)**. See [`LICENSE`](LICENSE) for details.

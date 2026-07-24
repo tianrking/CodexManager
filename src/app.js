@@ -29,8 +29,8 @@ const translations = {
     statusOnline: "Online",
     statusOffline: "Offline",
     defaultPathLabel: "Default Project Directory (or drag folder here)",
-    btnStop: "■ Stop",
-    btnLaunch: "▶ Launch",
+    btnStop: "Stop",
+    btnLaunch: "Launch",
     tipOpenFolder: "Open profile data folder in Finder / Explorer",
     tipEdit: "Edit Profile",
     tipDelete: "Delete Profile",
@@ -64,8 +64,8 @@ const translations = {
     statusOnline: "在线",
     statusOffline: "离线",
     defaultPathLabel: "默认主页目录 (或拖拽文件夹启动)",
-    btnStop: "■ 停止运行",
-    btnLaunch: "▶ 独立启动",
+    btnStop: "停止运行",
+    btnLaunch: "独立启动",
     tipOpenFolder: "在 Finder / 文件资源管理器中查看此 Profile 凭据目录",
     tipEdit: "编辑 Profile",
     tipDelete: "删除 Profile",
@@ -99,8 +99,8 @@ const translations = {
     statusOnline: "En línea",
     statusOffline: "Desconectado",
     defaultPathLabel: "Directorio por defecto (o arrastre una carpeta aquí)",
-    btnStop: "■ Detener",
-    btnLaunch: "▶ Iniciar",
+    btnStop: "Detener",
+    btnLaunch: "Iniciar",
     tipOpenFolder: "Abrir carpeta de datos en Finder / Explorador",
     tipEdit: "Editar Perfil",
     tipDelete: "Eliminar Perfil",
@@ -385,6 +385,13 @@ function updateStatusBadge() {
   }
 }
 
+// 线条图标（lucide 风格，与 header 统一，替代 emoji）
+const ICON_PLAY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v14l11-7-11-7z"/></svg>';
+const ICON_STOP = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+const ICON_FOLDER = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+const ICON_EDIT = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+const ICON_DELETE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
+
 function renderProfiles() {
   const query = searchInput.value.toLowerCase().trim();
   const filtered = localProfiles.filter(p => 
@@ -407,7 +414,7 @@ function renderProfiles() {
       <div class="card" data-card data-profile-id="${escapeHtml(profile.id)}">
         <div class="card-header">
           <div class="card-title-group">
-            <div class="profile-avatar" style="background-color: ${profile.color}20; color: ${profile.color}">
+            <div class="profile-avatar" style="background-color: ${profile.color}1f; color: ${profile.color}">
               ${escapeHtml(profile.name.charAt(0).toUpperCase())}
             </div>
             <div class="profile-info">
@@ -416,14 +423,12 @@ function renderProfiles() {
             </div>
           </div>
           <span class="running-tag ${isRunning ? 'online' : 'offline'}">
-            ${isRunning ? `● ${t('statusOnline')} (${pid})` : `○ ${t('statusOffline')}`}
+            ${isRunning ? `● ${t('statusOnline')} <span class="pid">${pid}</span>` : t('statusOffline')}
           </span>
         </div>
 
         <div class="card-body">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-          </svg>
+          ${ICON_FOLDER}
           <span title="${escapeHtml(profile.default_project_path || t('defaultPathLabel'))}">
             ${escapeHtml(profile.default_project_path || t('defaultPathLabel'))}
           </span>
@@ -431,25 +436,18 @@ function renderProfiles() {
 
         <div class="card-actions">
           ${isRunning ? `
-            <button class="btn btn-secondary btn-launch" data-action="stop" style="color: var(--accent-red); background: rgba(248, 113, 113, 0.15)">
-              ${t('btnStop')}
+            <button class="btn btn-danger-outline btn-stop" data-action="stop">
+              ${ICON_STOP}<span>${t('btnStop')}</span>
             </button>
           ` : `
-            <button class="btn btn-primary btn-launch" data-action="launch" style="background: ${profile.color}">
-              ${t('btnLaunch')}
+            <button class="btn btn-launch" data-action="launch" style="background:${profile.color}1a;color:${profile.color};border-color:${profile.color}33">
+              ${ICON_PLAY}<span>${t('btnLaunch')}</span>
             </button>
           `}
 
-          <button class="btn btn-secondary" data-action="openDir" title="${escapeHtml(t('tipOpenFolder'))}">
-            📂
-          </button>
-
-          <button class="btn btn-secondary" data-action="edit" title="${escapeHtml(t('tipEdit'))}">
-            ✏️
-          </button>
-          <button class="btn btn-secondary" data-action="delete" title="${escapeHtml(t('tipDelete'))}" style="color: var(--accent-red)">
-            🗑️
-          </button>
+          <button class="btn btn-secondary btn-icon" data-action="openDir" title="${escapeHtml(t('tipOpenFolder'))}" aria-label="${escapeHtml(t('tipOpenFolder'))}">${ICON_FOLDER}</button>
+          <button class="btn btn-secondary btn-icon" data-action="edit" title="${escapeHtml(t('tipEdit'))}" aria-label="${escapeHtml(t('tipEdit'))}">${ICON_EDIT}</button>
+          <button class="btn btn-secondary btn-icon btn-danger" data-action="delete" title="${escapeHtml(t('tipDelete'))}" aria-label="${escapeHtml(t('tipDelete'))}">${ICON_DELETE}</button>
         </div>
       </div>
     `;

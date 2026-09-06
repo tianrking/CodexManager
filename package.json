@@ -13,11 +13,11 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.0.0",
-    "vite": "^8.1.5"
+    "vite": "^8.2.2"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
-    "@tauri-apps/plugin-dialog": "^2.0.0",
-    "@tauri-apps/plugin-opener": "^2.5.4"
+    "@tauri-apps/plugin-dialog": "^2.7.3",
+    "@tauri-apps/plugin-opener": "^2.5.5"
   }
 }
